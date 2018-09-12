@@ -1,4 +1,6 @@
-sktree -a ExampleAnalyzerDiElectron -S DoubleEG  -list dilepton_list -s SKTree_LeptonSkim -n 300 -c v7-6-6
+sktree -a DYee -S DoubleEG  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
+sktree -a DYee -list isr_dy_list -s FLATCAT -n 50 
+
 # above line is same as the follwing 6 lines together
 #sktree -a ExampleAnalyzerDiElectron -list dy_mcatnlo -s SKTree_DiLepSkim -n 15 
 #sktree -a ExampleAnalyzerDiElectron -list diboson_pythia -s SKTree_DiLepSkim -n 15 
