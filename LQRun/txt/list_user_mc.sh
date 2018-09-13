@@ -104,7 +104,7 @@ declare -a tmp2=(
  )
 
 #declare -a test_list=('DYJets' 'DYJets_10to50') 
-declare -a isr_bkg_list=('DYJets' 'DYJets_10to50' 'TT_powheg' 'WW'  'WZ' 'ZZ' 'WJets') 
+declare -a isr_bkg_list=('TT_powheg' 'WW'  'WZ' 'ZZ' 'WJets') 
 declare -a isr_dy_list=('DYJets' 'DYJets_10to50')
 
 declare -a new_list=('DYJets' 'LowStatDYJets' )
