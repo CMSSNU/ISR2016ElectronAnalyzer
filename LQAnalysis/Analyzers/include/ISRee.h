@@ -1,13 +1,13 @@
-#ifndef DYee_h
-#define DYee_h
+#ifndef ISRee_h
+#define ISRee_h
 
 #include "AnalyzerCore.h"
-class DYee : public AnalyzerCore {
+class ISRee : public AnalyzerCore {
 
  public:
   //// constructors                                                                                                                                                             
-  DYee();
-  ~DYee();
+  ISRee();
+  ~ISRee();
 
   /// Functions from core
   virtual void BeginCycle() throw( LQError );
@@ -28,6 +28,6 @@ class DYee : public AnalyzerCore {
   std::vector<snu::KElectron> out_electrons;
 
 
-  ClassDef ( DYee, 1);
+  ClassDef ( ISRee, 1);
 };
 #endif

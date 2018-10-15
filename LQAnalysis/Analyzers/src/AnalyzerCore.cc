@@ -2468,7 +2468,7 @@ void AnalyzerCore::SetupID(){
   SetupSelectionMuon(lqdir + "/CATConfig/SelectionConfig/muons.sel");
   SetupSelectionMuon(lqdir + "/CATConfig/SelectionConfig/user_muons.sel");
 
-  SetupSelectionElectron(lqdir + "/CATConfig/SelectionConfig/electrons.sel");
+  SetupSelectionElectron(lqdir + "/CATConfig/SelectionConfig/electrons_isr.sel");
   SetupSelectionElectron(lqdir + "/CATConfig/SelectionConfig/user_electrons.sel");
   //if(k_classname.Contains("HNDiElectron"))SetupSelectionElectron(lqdir + "/CATConfig/SelectionConfig/"+username+"_electrons.sel");
   //if(k_classname.Contains("FakeRateCalculator_El")) SetupSelectionElectron(lqdir + "/CATConfig/SelectionConfig/"+username+"_electrons.sel");

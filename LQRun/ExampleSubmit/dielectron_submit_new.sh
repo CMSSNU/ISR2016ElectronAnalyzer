@@ -1,5 +1,10 @@
-sktree -a DYee -S DoubleEG  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
-sktree -a DYee -list isr_dy_list -s FLATCAT -n 50 
+#sktree -a ISRee -S DoubleEG  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
+#sktree -a ISRee -list isr_dy_list -s FLATCAT -n 50 
+#
+#sktree -a ISRee_unfolding -S DoubleEG  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
+#sktree -a ISRee_unfolding -list isr_dy_list -s FLATCAT -n 50 
+
+sktree -a ISRee_FSRunfolding -list isr_dy_list -s FLATCAT -n 50 
 
 # above line is same as the follwing 6 lines together
 #sktree -a ExampleAnalyzerDiElectron -list dy_mcatnlo -s SKTree_DiLepSkim -n 15 
