@@ -125,18 +125,27 @@ void ISRee_unfolding::ExecuteEvents()throw( LQError ){
     
     if(genl1!=TLorentzVector(0,0,0,0)&&genl2!=TLorentzVector(0,0,0,0)){
 
+      weight_ = weight*weigtbytrig;
+      ptGen.push_back(genl1.Pt()); // FIXME
+      ptGen.push_back(genl2.Pt());
+      ptGen.push_back((gendy_postFSR).Pt());
+
+      mGen.push_back(0.000511);
+      mGen.push_back(0.000511);
+      mGen.push_back((gendy_postFSR).M());
+
       if(fabs(genl1_postFSR.Eta()) < 2.4 && fabs(genl2_postFSR.Eta()) < 2.4){
          if((genl1_postFSR.Pt() > 25 && genl2_postFSR.Pt() > 15)||(genl2_postFSR.Pt() > 25 && genl1_postFSR.Pt() > 15)){
             issignal = 1;
 
-            weight_ = weight*weigtbytrig;
-            ptGen.push_back(genl1.Pt()); // FIXME
-            ptGen.push_back(genl2.Pt());
-            ptGen.push_back((gendy_postFSR).Pt());
+            //weight_ = weight*weigtbytrig;
+            //ptGen.push_back(genl1.Pt()); // FIXME
+            //ptGen.push_back(genl2.Pt());
+            //ptGen.push_back((gendy_postFSR).Pt());
 
-            mGen.push_back(0.000511);
-            mGen.push_back(0.000511);
-            mGen.push_back((gendy_postFSR).M());
+            //mGen.push_back(0.000511);
+            //mGen.push_back(0.000511);
+            //mGen.push_back((gendy_postFSR).M());
          }
       }
     }

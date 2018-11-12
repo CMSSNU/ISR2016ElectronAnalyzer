@@ -23,6 +23,7 @@
 #pragma link C++ class GetFakeSF+;
 #pragma link C++ class PileupValidation+;
 #pragma link C++ class ISRee+;
+#pragma link C++ class ISRemu+;
 #pragma link C++ class ISRee_unfolding+;
 #pragma link C++ class ISRee_FSRunfolding+;
 

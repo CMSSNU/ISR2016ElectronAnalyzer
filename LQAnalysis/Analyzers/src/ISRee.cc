@@ -67,7 +67,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
   // double electron trigger
   TString dielectron_trig="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v";//
 
-  // Now you should do an OR of 4 triggers 
   vector<TString> trignames;
   trignames.push_back(dielectron_trig);
 
@@ -75,22 +74,15 @@ void ISRee::ExecuteEvents()throw( LQError ){
   double weigtbytrig = WeightByTrigger(dielectron_trig,TargetLumi);
 
   // Mass boundaries  
-  double massBinBoundaries[] = {20., 30., 40., 50., 60., 70., 80., 100., 200., 350};
+  double massBinBoundaries[] = {40., 60., 80., 100., 200., 350};
   const int nBoundaries = sizeof(massBinBoundaries)/sizeof(double); 
 
   vector<TString> massbins;
-  massbins.push_back("m20to30");
-  massbins.push_back("m30to40");
-  massbins.push_back("m40to50");
-  massbins.push_back("m50to60");
-  massbins.push_back("m60to70");
-  massbins.push_back("m70to80");
+  massbins.push_back("m40to60");
+  massbins.push_back("m60to80");
   massbins.push_back("m80to100");
   massbins.push_back("m100to200");
   massbins.push_back("m200to350");
-
-  //double genmassBinBoundaries[] = {10.,20.,30.,40.,50.,60.,70.,80.,90.,100.};
-  //const int gennBoundaries = sizeof(genmassBinBoundaries)/sizeof(double);
 
   int genmassbin = 90;
   double genmassBinBoundaries[genmassbin+1];
@@ -110,16 +102,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
      genmassbins.push_back(name);
   }
 
-  //genmassbins.push_back("m10to20");
-  //genmassbins.push_back("m20to30");
-  //genmassbins.push_back("m30to40");
-  //genmassbins.push_back("m40to50");
-  //genmassbins.push_back("m50to60");
-  //genmassbins.push_back("m60to70");
-  //genmassbins.push_back("m70to80");
-  //genmassbins.push_back("m80to90");
-  //genmassbins.push_back("m90to100");
-
   /// Apply the gen weight 
   if(!isData) weight*=MCweight;
 
@@ -133,7 +115,7 @@ void ISRee::ExecuteEvents()throw( LQError ){
     TLorentzVector gendy_preFSR,genl1_preFSR,genl2_preFSR;   
     int truthsize=truthcol.size();
 
-    //loop for collect dimuon Drell-Yan product
+    //loop for collect dielectron Drell-Yan product
     for(int i=0;i<truthsize;i++){
       snu::KTruth truth=truthcol.at(i);
       if(truth.GenStatus()!=1) continue;  //stable-particle-requirement
@@ -180,7 +162,7 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
       if(gendimass > 80. && gendimass < 100.){ 
          FillCutFlow("NoCut", 1.); 
-        if((genl1_preFSR.Pt()> 25 && genl2_preFSR.Pt()> 15)||(genl2_preFSR.Pt()> 25 && genl1_preFSR.Pt()> 15) && fabs(genl1_preFSR.Eta()) < 2.4 && fabs(genl2_preFSR.Eta() && gendipt < 100.) < 2.4){
+        if((genl1_preFSR.Pt()> 25 && genl2_preFSR.Pt()> 15)||(genl2_preFSR.Pt()> 25 && genl1_preFSR.Pt()> 15) && fabs(genl1_preFSR.Eta()) < 2.4 && fabs(genl2_preFSR.Eta()) < 2.4 && gendipt < 100.){
           event_m80to100 = true;
           FillCutFlow("GenKinCut", 1.); 
         }
@@ -189,7 +171,8 @@ void ISRee::ExecuteEvents()throw( LQError ){
       FillHist("gendipt",gendipt,weight*weigtbytrig,0.,100.,100);
       FillHist("gendipt_check",(genl1_preFSR+genl2_preFSR).Pt(),weight*weigtbytrig,0.,100.,100);
       FillHist("gendimass",gendimass,weight*weigtbytrig,0.,500.,1000);
-
+ 
+      // tag pre fsr mass bin
       TString postfix_preFSR="";
       for(int i = 0; i < gennBoundaries-1; i++){
          if(gendy.M() > genmassBinBoundaries[i] && gendy.M() < genmassBinBoundaries[i+1]){
@@ -201,19 +184,31 @@ void ISRee::ExecuteEvents()throw( LQError ){
       if(postfix_preFSR.Contains("m")) FillHist("gendipt_preFSR_"+postfix_preFSR,gendy.Pt(),weight*weigtbytrig,0.,100.,100);
       if(gendy.Pt() < 100 && postfix_preFSR.Contains("m")) FillHist("gendimass_preFSR_"+postfix_preFSR,gendy.M(),weight*weigtbytrig,0.,500.,1000);
 
-      if( fabs(genl1.Eta()) < 2.4 && fabs(genl2.Eta()) < 2.4 ){
-         if( (genl1.Pt() > 25 && genl2.Pt() > 15) || (genl1.Pt() > 15 && genl2.Pt() > 25)){
+
+      // make 2D histogram of lep1 and lep2 for each mass range
+      if(postfix_preFSR.Contains("m")) FillHist("preFSR_"+postfix_preFSR+"_l1pt_l2pt",genl1_preFSR.Pt(), genl2_preFSR.Pt(),weight*weigtbytrig,0.,200.,200, 0.,200.,200);
+
+      if( fabs(genl1_preFSR.Eta()) < 2.4 && fabs(genl2_preFSR.Eta()) < 2.4 ){
+         // make 2D histogram of lep1 and lep2 for each mass range with eta cut
+         if(postfix_preFSR.Contains("m")) FillHist("preFSR_"+postfix_preFSR+"_l1pt_l2pt_etacut",genl1_preFSR.Pt(), genl2_preFSR.Pt(),weight*weigtbytrig,0.,200.,200, 0.,200.,200);
+ 
+         if( (genl1_preFSR.Pt() > 25 && genl2_preFSR.Pt() > 15) || (genl1_preFSR.Pt() > 15 && genl2_preFSR.Pt() > 25)){
             FillHist("gendipt_etaCut_25_15_preFSR",gendy.Pt(),weight*weigtbytrig,0.,100.,100);
+
+            // make 2D histogram of lep1 and lep2 for each mass range with eta/pt cut
+            if(postfix_preFSR.Contains("m")) FillHist("preFSR_"+postfix_preFSR+"_l1pt_l2pt_etacut_ptcut",genl1_preFSR.Pt(), genl2_preFSR.Pt(),weight*weigtbytrig,0.,200.,200, 0.,200.,200);
+
             if(postfix_preFSR.Contains("m")) FillHist("gendipt_etaCut_25_15_preFSR_"+postfix_preFSR,gendy.Pt(),weight*weigtbytrig,0.,100.,100);
             if(gendy.Pt() < 100 && postfix_preFSR.Contains("m")) FillHist("gendimass_etaCut_25_15_preFSR_"+postfix_preFSR,gendy.M(),weight*weigtbytrig,0.,500.,1000);
          }
-         if( (genl1.Pt() > 20 && genl2.Pt() > 10) || (genl1.Pt() > 10 && genl2.Pt() > 20)){
+         if( (genl1_preFSR.Pt() > 20 && genl2_preFSR.Pt() > 10) || (genl1_preFSR.Pt() > 10 && genl2_preFSR.Pt() > 20)){
             FillHist("gendipt_etaCut_25_15_preFSR",gendy.Pt(),weight*weigtbytrig,0.,100.,100);
             if(postfix_preFSR.Contains("m")) FillHist("gendipt_etaCut_20_10_preFSR_"+postfix_preFSR,gendy.Pt(),weight*weigtbytrig,0.,100.,100);
             if(gendy.Pt() < 100 && postfix_preFSR.Contains("m")) FillHist("gendimass_etaCut_20_10_preFSR_"+postfix_preFSR,gendy.M(),weight*weigtbytrig,0.,500.,1000);
          }
       }
 
+      // this postfix is for mass region
       TString postfix="";
       for(int i = 0; i < nBoundaries-1; i++){
          if(gendy_postFSR.M() > massBinBoundaries[i] && gendy_postFSR.M() < massBinBoundaries[i+1]){
@@ -270,8 +265,16 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
      for(int i = 0; i < nBoundaries-1; i++){
         if(gendimass > massBinBoundaries[i] && gendimass < massBinBoundaries[i+1]){
-          FillHist("gendielectronpt_"+massbins[i],gendipt,weight*weigtbytrig,0.,100.,100);
-          FillHist("gendielectronmass_"+massbins[i],gendimass,weight*weigtbytrig,0.,500.,1000);
+
+          FillHist("gendielectronpt_"+massbins[i],gendipt,weight*weigtbytrig,0.,500.,500);
+          FillHist("gendielectronmass_"+massbins[i],gendimass,weight*weigtbytrig,0.,500.,500);
+
+          if(gendipt<100.) FillHist("gendielectronpt_"+massbins[i]+"_pt100",gendipt,weight*weigtbytrig,0.,500.,500);
+          if(gendipt<100.) FillHist("gendielectronmass_"+massbins[i]+"_pt100",gendimass,weight*weigtbytrig,0.,500.,500);
+
+          if(gendipt<5.) FillHist("gendielectronpt_"+massbins[i]+"_pt5",gendipt,weight*weigtbytrig,0.,500.,500);
+          if(gendipt<5.) FillHist("gendielectronmass_"+massbins[i]+"_pt5",gendimass,weight*weigtbytrig,0.,500.,500);
+
           if(genptlep1 > genptlep2){
             if(genptlep1 > 28 && genptlep2 > 17 && fabs(genetalep1) < 2.4 && fabs(genetalep2) < 2.4){
               FillHist("gendielectronpt_kincut_"+massbins[i],gendipt,weight*weigtbytrig,0.,100.,100);
@@ -381,36 +384,82 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
    TString postfix1="_asymptcut";
 
+    // for b veto
+    std::vector<snu::KJet> jetsPreColl = GetJets("JET_NOLEPTONVETO", 20, 2.4); 
+    std::vector<snu::KJet> bjets_loose, bjets_medium, bjets_tight;
+
+    for(int i = 0; i < jetsPreColl.size(); i++){
+        if( jetsPreColl.at(i).IsBTagged(snu::KJet::CSVv2, snu::KJet::Loose) ) bjets_loose.push_back(jetsPreColl.at(i));
+        if( jetsPreColl.at(i).IsBTagged(snu::KJet::CSVv2, snu::KJet::Medium) ) bjets_medium.push_back(jetsPreColl.at(i));
+        if( jetsPreColl.at(i).IsBTagged(snu::KJet::CSVv2, snu::KJet::Tight) ) bjets_tight.push_back(jetsPreColl.at(i));
+    }
+
    // Kinematic cuts from 2016 DY x-section
    if(trig_pass && is_os && TriggerMatch1 && ptlep1 > 25. && ptlep2 > 15. && fabs(etalep1) < 2.4 && fabs(etalep2) < 2.4 && dipt < 100.){
        if(event_m80to100) FillCutFlow("recoKincuts",1.);
 
-     for(int i = 0; i < nBoundaries-1; i++){
-        if(dimass > massBinBoundaries[i] && dimass < massBinBoundaries[i+1]){
+       for(int i = 0; i < nBoundaries-1; i++){
+          if(dimass > massBinBoundaries[i] && dimass < massBinBoundaries[i+1]){
 
-          // dilepton pt for each mass bin
-          FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
-          FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
-          // leading and subleading pt for each mass bin
-          FillHist(prefix+"leadingpt_"+massbins[i]+postfix1,ptlep1,weight*idsf*pileup_reweight*recosf*weigtbytrig, leppt_min, leppt_max, npt);
-          FillHist(prefix+"subleadingpt_"+massbins[i]+postfix1,ptlep2,weight*idsf*pileup_reweight*recosf*weigtbytrig, leppt_min, leppt_max, npt);
+            // dilepton pt for each mass bin
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
 
-          FillHist(prefix+"leadingeta_"+massbins[i]+postfix1,etalep1,weight*idsf*pileup_reweight*recosf*weigtbytrig, lepeta_min, lepeta_max, neta);
-          FillHist(prefix+"subleadingeta_"+massbins[i]+postfix1,etalep2,weight*idsf*pileup_reweight*recosf*weigtbytrig, lepeta_min, lepeta_max, neta);
-        }
-     }
+            // loose B 
+            if(bjets_loose.size()==0){
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_looseBveto",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_looseBveto",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            }
 
-     FillHist(prefix+"Mass"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
-     FillHist(prefix+"Pt"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
-     FillHist(prefix+"Met"+postfix1, eventbase->GetEvent().MET(),weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            if(bjets_loose.size()>=1){
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_looseBcontrol",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_looseBcontrol",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            }
 
-     FillHist(prefix+"DZ"+postfix1, electrons[0].dz(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -.3, .3, 300);
-     FillHist(prefix+"DZ"+postfix1, electrons[1].dz(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -.3, .3, 300);
+            // medium B
+            if(bjets_medium.size()==0){
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_mediumBveto",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_mediumBveto",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            }
 
-     FillHist(prefix+"DXY"+postfix1, electrons[0].dxy(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -0.2, 0.2, 200);
-     FillHist(prefix+"DXY"+postfix1, electrons[1].dxy(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -0.2, 0.2, 200);
+            if(bjets_medium.size()>=1){
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_mediumBcontrol",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_mediumBcontrol",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            }
 
-     FillHist(prefix+"Nvtx"+postfix1,eventbase->GetEvent().nVertices() ,weight*idsf*pileup_reweight*recosf*weigtbytrig, 0. , 50., 50);
+            // tight B
+            if(bjets_tight.size()==0){
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_tightBveto",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_tightBveto",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            }   
+
+            if(bjets_tight.size()>=1){
+            FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_tightBcontrol",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_tightBcontrol",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+            } 
+
+            // leading and subleading pt for each mass bin
+            FillHist(prefix+"leadingpt_"+massbins[i]+postfix1,ptlep1,weight*idsf*pileup_reweight*recosf*weigtbytrig, leppt_min, leppt_max, npt);
+            FillHist(prefix+"subleadingpt_"+massbins[i]+postfix1,ptlep2,weight*idsf*pileup_reweight*recosf*weigtbytrig, leppt_min, leppt_max, npt);
+
+            FillHist(prefix+"leadingeta_"+massbins[i]+postfix1,etalep1,weight*idsf*pileup_reweight*recosf*weigtbytrig, lepeta_min, lepeta_max, neta);
+            FillHist(prefix+"subleadingeta_"+massbins[i]+postfix1,etalep2,weight*idsf*pileup_reweight*recosf*weigtbytrig, lepeta_min, lepeta_max, neta);
+          }
+
+       }
+
+       if(dimass>40 && dimass < 350) FillHist(prefix+"Mass"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+       if(dimass>40 && dimass < 350) FillHist(prefix+"Pt"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+
+       FillHist(prefix+"Met"+postfix1, eventbase->GetEvent().MET(),weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+       FillHist(prefix+"DZ"+postfix1, electrons[0].dz(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -.3, .3, 300);
+       FillHist(prefix+"DZ"+postfix1, electrons[1].dz(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -.3, .3, 300);
+
+       FillHist(prefix+"DXY"+postfix1, electrons[0].dxy(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -0.2, 0.2, 200);
+       FillHist(prefix+"DXY"+postfix1, electrons[1].dxy(), weight*idsf*pileup_reweight*recosf*weigtbytrig, -0.2, 0.2, 200);
+
+       FillHist(prefix+"Nvtx"+postfix1,eventbase->GetEvent().nVertices() ,weight*idsf*pileup_reweight*recosf*weigtbytrig, 0. , 50., 50);
    } // event selection for opposite sign electrons 
 
 

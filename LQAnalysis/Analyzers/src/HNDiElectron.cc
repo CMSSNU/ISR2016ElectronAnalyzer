@@ -678,7 +678,6 @@ void HNDiElectron::ExecuteEvents()throw( LQError ){
   std::vector<snu::KFatJet> fatjetcoll_tau21_045 = GetFatJets("FATJET_HN_tau045");
   std::vector<snu::KFatJet> fatjetcoll_notau21 = GetFatJets("FATJET_HN");
   
-  
   /// correct L1 JEC and apply JMR
 
   std::vector<snu::KFatJet> fatjetcoll_updated = GetCorrectedFatJet(fatjetcoll);
