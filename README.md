@@ -17,7 +17,7 @@ After the above line, follow the instructions to register an email address.
 
 > source dielectron_submit_new.sh
 
-
+Below instruction is from John.
 
 //###########################
 //   Author John Almond
