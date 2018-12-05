@@ -323,28 +323,39 @@ void ISRee::ExecuteEvents()throw( LQError ){
   FillHist("NonZero_Nvtx", 1, weight, 0.,2.,2);
   
   std::vector<snu::KElectron> electrons =  GetElectrons(true,true, "ELECTRON_POG_MEDIUM"); // Cut Based POG Medium WP 
-  std::vector<snu::KElectron> electrons_ip =  GetElectrons(true,true, "ELECTRON_POG_MEDIUM_IP"); // + IP cuts
 
-   std::vector<snu::KMuon> muons =GetMuons("MUON_POG_TIGHT",true); 
+  std::vector<snu::KMuon> muons =GetMuons("MUON_POG_TIGHT",true); 
 
-   bool trig_pass= PassTriggerOR(trignames);
+  bool trig_pass= PassTriggerOR(trignames);
 
-   double idsf = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 0);
-   double idsf_up = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 1);
-   double idsf_down = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, -1);
+  double idsf = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 0);
+  double idsf_ = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electrons, 0);
+  double idsf_up = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 1);
+  double idsf_down = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, -1);
 
-   double recosf = mcdata_correction->ElectronRecoScaleFactor(electrons, 0);
-   double recosf_up = mcdata_correction->ElectronRecoScaleFactor(electrons, 1);
-   double recosf_down = mcdata_correction->ElectronRecoScaleFactor(electrons, -1);
+  double recosf = mcdata_correction->ElectronRecoScaleFactor(electrons, 0);
+  double recosf_up = mcdata_correction->ElectronRecoScaleFactor(electrons, 1);
+  double recosf_down = mcdata_correction->ElectronRecoScaleFactor(electrons, -1);
 
-   bool is_doubleelectron = (electrons.size() == 2);
+  bool is_doubleelectron = (electrons.size() == 2);
 
-   if(trig_pass) {
-     if(event_m80to100) FillCutFlow("Trigger",1.);
-   }
+  if(trig_pass) {
+    if(event_m80to100) FillCutFlow("Trigger",1.);
+  }
  
-   // medium working point pog id without ip cuts
-   if(is_doubleelectron){
+  // medium working point pog id without ip cuts
+  if(is_doubleelectron){
+
+  std::vector<snu::KElectron> electron_leading;
+  std::vector<snu::KElectron> electron_subleading;
+  electron_leading.push_back(electrons.at(0));
+  electron_subleading.push_back(electrons.at(1));
+  double idsf_lead = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electron_leading, 0);
+  double idsf_sublead = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electron_subleading, 0);
+
+  double recosf_lead = mcdata_correction->ElectronRecoScaleFactor(electron_leading, 0);
+  double recosf_sublead = mcdata_correction->ElectronRecoScaleFactor(electron_subleading, 0);
+
    if(event_m80to100 && trig_pass) FillCutFlow("TwoPOGEle",1.); 
    
    bool is_os = (electrons.at(0).Charge() == (-electrons.at(1).Charge()));
@@ -384,6 +395,9 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
    TString postfix1="_asymptcut";
 
+   double trig_sf = 1.;
+   if(!isData) trig_sf = mcdata_correction->GetDoubleEGTriggerEffISR(electrons);
+
     // for b veto
     std::vector<snu::KJet> jetsPreColl = GetJets("JET_NOLEPTONVETO", 20, 2.4); 
     std::vector<snu::KJet> bjets_loose, bjets_medium, bjets_tight;
@@ -395,8 +409,76 @@ void ISRee::ExecuteEvents()throw( LQError ){
     }
 
    // Kinematic cuts from 2016 DY x-section
-   if(trig_pass && is_os && TriggerMatch1 && ptlep1 > 25. && ptlep2 > 15. && fabs(etalep1) < 2.4 && fabs(etalep2) < 2.4 && dipt < 100.){
+   if(trig_pass && is_os && TriggerMatch1 && ptlep1 > 25. && ptlep2 > 15. && fabs(etalep1) < 2.5 && fabs(etalep2) < 2.5 && dipt < 100.){
        if(event_m80to100) FillCutFlow("recoKincuts",1.);
+
+            if( dimass > 40. && dimass < 350.){
+               // dilepton pt for each mass bin
+               FillHist(prefix+"dielectronpt_"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmass_"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin
+               FillHist(prefix+"dielectronptIDSF_"+postfix1,dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassIDSF_"+postfix1,dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin
+               FillHist(prefix+"dielectronptTrgSF_"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassTrgSF_"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin, without any scale factor
+               FillHist(prefix+"dielectronptNoRecoSFNoTrgSFNoIDSF_"+postfix1,dipt,weight*pileup_reweight*weigtbytrig, dipt_min, dipt_max, ndipt); 
+               FillHist(prefix+"dielectronmassNoRecoSFNoTrgSFNoIDSF_"+postfix1,dimass,weight*pileup_reweight*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin
+               FillHist(prefix+"dielectronptRecoSFNoTrgSFNoIDSF_"+postfix1,dipt,weight*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt); 
+               FillHist(prefix+"dielectronmassRecoSFNoTrgSFNoIDSF_"+postfix1,dimass,weight*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin, No trigger scale factor applied 
+               FillHist(prefix+"dielectronptRecoSFNoTrgSFIDSF_"+postfix1,dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt); 
+               FillHist(prefix+"dielectronmassRecoSFNoTrgSFIDSF_"+postfix1,dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin, trigger and ID scale factor applied
+               FillHist(prefix+"dielectronptRecoSFTrgSFIDSF_"+postfix1,dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassRecoSFTrgSFIDSF_"+postfix1,dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+
+               // dilepton pt for each mass bin
+               // loose B 
+               if(bjets_medium.size()==0){
+               FillHist(prefix+"dielectronptTrgSFIDSF_"+postfix1+"_mediumBveto",dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassTrgSFIDSF_"+postfix1+"_mediumBveto",dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+               }
+
+               if(bjets_tight.size()==0){
+               FillHist(prefix+"dielectronptTrgSFIDSF_"+postfix1+"_tightBveto",dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassTrgSFIDSF_"+postfix1+"_tightBveto",dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+               }
+               // leading and subleading pt, without any SF 
+               FillHist(prefix+"leadingptNoRecoSFNoTrgSFNoIDSF_"+postfix1,   ptlep1,weight*pileup_reweight*weigtbytrig, leppt_min, leppt_max, npt);
+               FillHist(prefix+"subleadingptNoRecoSFNoTrgSFNoIDSF_"+postfix1,ptlep2,weight*pileup_reweight*weigtbytrig, leppt_min, leppt_max, npt);
+               // leading and subleading pt, Reco SF
+               FillHist(prefix+"leadingptRecoSFNoTrgSFNoIDSF_"+postfix1,   ptlep1,weight*pileup_reweight*recosf_lead*weigtbytrig, leppt_min, leppt_max, npt);
+               FillHist(prefix+"subleadingptRecoSFNoTrgSFNoIDSF_"+postfix1,ptlep2,weight*pileup_reweight*recosf_sublead*weigtbytrig, leppt_min, leppt_max, npt);
+               // leading and subleading pt, ID SF 
+               FillHist(prefix+"leadingptRecoSFNoTrgSFIDSF_"+postfix1,   ptlep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig, leppt_min, leppt_max, npt);
+               FillHist(prefix+"subleadingptRecoSFNoTrgSFIDSF_"+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig, leppt_min, leppt_max, npt);
+               // leading and subleading pt, Trig SF 
+               FillHist(prefix+"leadingptRecoSFTrgSFIDSF_"+postfix1,   ptlep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
+               FillHist(prefix+"subleadingptRecoSFTrgSFIDSF_"+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
+
+               // leading and subleading eta
+               FillHist(prefix+"leadingetaNoRecoSFNoTrgSFNoIDSF_"+postfix1,   etalep1,weight*pileup_reweight*weigtbytrig, lepeta_min, lepeta_max, neta);
+               FillHist(prefix+"subleadingetaNoRecoSFNoTrgSFNoIDSF_"+postfix1,etalep2,weight*pileup_reweight*weigtbytrig, lepeta_min, lepeta_max, neta);
+               // leading and subleading eta
+               FillHist(prefix+"leadingetaRecoSFNoTrgSFNoIDSF_"+postfix1,   etalep1,weight*pileup_reweight*recosf_lead*weigtbytrig, lepeta_min, lepeta_max, neta);
+               FillHist(prefix+"subleadingetaRecoSFNoTrgSFNoIDSF_"+postfix1,etalep2,weight*pileup_reweight*recosf_sublead*weigtbytrig, lepeta_min, lepeta_max, neta);
+               // leading and subleading eta
+               FillHist(prefix+"leadingetaRecoSFNoTrgSFIDSF_"+postfix1,   etalep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig, lepeta_min, lepeta_max, neta);
+               FillHist(prefix+"subleadingetaRecoSFNoTrgSFIDSF_"+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig, lepeta_min, lepeta_max, neta);
+               // leading and subleading eta
+               FillHist(prefix+"leadingetaRecoSFTrgSFIDSF_"+postfix1,   etalep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+               FillHist(prefix+"subleadingetaRecoSFTrgSFIDSF_"+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+
+            }
 
        for(int i = 0; i < nBoundaries-1; i++){
           if(dimass > massBinBoundaries[i] && dimass < massBinBoundaries[i+1]){
@@ -404,6 +486,10 @@ void ISRee::ExecuteEvents()throw( LQError ){
             // dilepton pt for each mass bin
             FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
             FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+
+            // dilepton pt for each mass bin
+            FillHist(prefix+"dielectronptTrgSF_"+massbins[i]+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmassTrgSF_"+massbins[i]+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
 
             // loose B 
             if(bjets_loose.size()==0){
@@ -439,17 +525,16 @@ void ISRee::ExecuteEvents()throw( LQError ){
             } 
 
             // leading and subleading pt for each mass bin
-            FillHist(prefix+"leadingpt_"+massbins[i]+postfix1,ptlep1,weight*idsf*pileup_reweight*recosf*weigtbytrig, leppt_min, leppt_max, npt);
-            FillHist(prefix+"subleadingpt_"+massbins[i]+postfix1,ptlep2,weight*idsf*pileup_reweight*recosf*weigtbytrig, leppt_min, leppt_max, npt);
+            FillHist(prefix+"leadingpt_"+massbins[i]+postfix1,ptlep1,weight*idsf_lead*pileup_reweight*recosf*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
+            FillHist(prefix+"subleadingpt_"+massbins[i]+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
 
-            FillHist(prefix+"leadingeta_"+massbins[i]+postfix1,etalep1,weight*idsf*pileup_reweight*recosf*weigtbytrig, lepeta_min, lepeta_max, neta);
-            FillHist(prefix+"subleadingeta_"+massbins[i]+postfix1,etalep2,weight*idsf*pileup_reweight*recosf*weigtbytrig, lepeta_min, lepeta_max, neta);
+            // leading and subleading eta for each mass bin
+            FillHist(prefix+"leadingeta_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+            if(ptlep1>40 && ptlep2>40) FillHist(prefix+"leadingetapt40_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+            FillHist(prefix+"subleadingeta_"+massbins[i]+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
           }
 
        }
-
-       if(dimass>40 && dimass < 350) FillHist(prefix+"Mass"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
-       if(dimass>40 && dimass < 350) FillHist(prefix+"Pt"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
 
        FillHist(prefix+"Met"+postfix1, eventbase->GetEvent().MET(),weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
 
@@ -465,81 +550,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
    }// exactly two pog wp electrons
 
-   double idwipsf = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons_ip, 0);
-   double idwipsf_up = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons_ip, 1);
-   double idwipsf_down = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons_ip, -1);
-
-   double recowipsf = mcdata_correction->ElectronRecoScaleFactor(electrons_ip, 0);
-   double recowipsf_up = mcdata_correction->ElectronRecoScaleFactor(electrons_ip, 1);
-   double recowipsf_down = mcdata_correction->ElectronRecoScaleFactor(electrons_ip, -1);
-
-   // pog id + ip cuts
-   bool is_doubleelectronip = (electrons_ip.size() == 2);
-   if(is_doubleelectronip){
-  
-   bool is_os = (electrons_ip.at(0).Charge() == (-electrons_ip.at(1).Charge()));
-
-   double ptlep1 = electrons_ip[0].Pt();
-   double ptlep2 = electrons_ip[1].Pt();
-   double etalep1 = electrons_ip[0].Eta();
-   double etalep2 = electrons_ip[1].Eta();
-   double dipt = (electrons_ip[0]+electrons_ip[1]).Pt();
-   double dimass = (electrons_ip[0]+electrons_ip[1]).M();
-
-   bool TriggerMatch1 = (electrons_ip[0].TriggerMatched(dielectron_trig) && electrons_ip[1].TriggerMatched(dielectron_trig));
-
-   bool mcfromtau = (electrons_ip[0].MCFromTau()||electrons_ip[1].MCFromTau()); // is there case only one of the lepton decaying from tau in DY sample?
-   TString prefix="";
-   if(mcfromtau&&k_sample_name.Contains("DY")) prefix="tau_";
-
-   // set histogram range
-   double dimass_min = 0., dimass_max = 500.;
-   int ndimass = 1000;
-   double dipt_min = 0., dipt_max = 100.;
-   int ndipt = 100;
-   double leppt_min = 0., leppt_max = 500.;
-   int npt = 500;
-   double lepeta_min = -2.5, lepeta_max = 2.5;
-   int neta = 50;
-
-   TString postfix="_ipcut";
-
-   // temporary kinematic cut
-   if(trig_pass && is_os && TriggerMatch1 && ptlep1 > 25. && ptlep2 > 15. && fabs(etalep1) < 2.4 && fabs(etalep2) < 2.4 && dipt < 100.){
-
-     for(int i = 0; i < nBoundaries-1; i++){
-        if(dimass > massBinBoundaries[i] && dimass < massBinBoundaries[i+1]){
-
-          // dilepton pt for each mass bin
-          FillHist(prefix+"dielectronpt_"+massbins[i]+postfix,dipt,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dipt_min, dipt_max, ndipt);
-          FillHist(prefix+"dielectronmass_"+massbins[i]+postfix,dimass,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dimass_min, dimass_max, ndimass);
-          // leading and subleading pt for each mass bin
-          FillHist(prefix+"leadingpt_"+massbins[i]+postfix,ptlep1,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, leppt_min, leppt_max, npt);
-          FillHist(prefix+"subleadingpt_"+massbins[i]+postfix,ptlep2,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, leppt_min, leppt_max, npt);
-
-          FillHist(prefix+"leadingeta_"+massbins[i]+postfix,etalep1,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, lepeta_min, lepeta_max, neta);
-          FillHist(prefix+"subleadingeta_"+massbins[i]+postfix,etalep2,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, lepeta_min, lepeta_max, neta);
-        }
-     }
-     FillHist(prefix+"Mass"+postfix,dimass,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dimass_min, dimass_max, ndimass);
-     FillHist(prefix+"Pt"+postfix,dipt,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dipt_min, dipt_max, ndipt);
-     FillHist(prefix+"Met"+postfix, eventbase->GetEvent().MET(),weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dimass_min, dimass_max, ndimass);
-
-     FillHist(prefix+"DZ"+postfix, electrons_ip[0].dz(), weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, -.3, .3, 100);
-     FillHist(prefix+"DZ"+postfix, electrons_ip[1].dz(), weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, -.3, .3, 100);
-
-     FillHist(prefix+"DXY"+postfix, electrons_ip[0].dxy(), weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, -.2, .2, 200);
-     FillHist(prefix+"DXY"+postfix, electrons_ip[1].dxy(), weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, -.2, .2, 200);
-
-     FillHist(prefix+"Nvtx"+postfix,eventbase->GetEvent().nVertices() ,weight*idsf*pileup_reweight*recosf*weigtbytrig, 0. , 50., 50);
-
-     // check mass and pt with MET cut
-     if(eventbase->GetEvent().MET() < 35.){
-       FillHist(prefix+"Mass_met"+postfix,dimass,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dimass_min, dimass_max, ndimass);
-       FillHist(prefix+"Pt_met"+postfix,dipt,weight*idwipsf*pileup_reweight*recowipsf*weigtbytrig, dipt_min, dipt_max, ndipt);
-     }
-   } // event selection for opposite sign electrons 
-  } 
    return;
 }// End of execute event loop
   

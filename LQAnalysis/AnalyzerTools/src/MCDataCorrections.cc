@@ -624,6 +624,91 @@ double MCDataCorrections::TriggerScaleFactorPeriodDependant( vector<snu::KElectr
 
 }
 
+double  MCDataCorrections::GetDoubleMUTriggerEffISR(vector<snu::KMuon> mu){
+
+  double lumi_periodB = 5.929001722;
+  double lumi_periodC = 2.645968083;
+  double lumi_periodD = 4.35344881;
+  double lumi_periodE = 4.049732039;
+  double lumi_periodF = 3.157020934;
+  double lumi_periodG = 7.549615806;
+  double lumi_periodH = 8.545039549 + 0.216782873;
+  double total_lumi = (lumi_periodB+lumi_periodC+lumi_periodD+lumi_periodE+lumi_periodF+lumi_periodG+lumi_periodH);
+  double lumi_BF = lumi_periodB+lumi_periodC+lumi_periodD+lumi_periodE+lumi_periodF;
+  double lumi_GH = lumi_periodG+lumi_periodH;
+
+  if(corr_isdata) return 1.;
+
+  double sf_BF = 1., sf_GH = 1.;
+
+  double l1pt = mu.at(0).Pt();
+  double l2pt = mu.at(1).Pt();
+
+  if(l1pt >= 120.) l1pt = 119.; 
+  if(l2pt >= 120.) l2pt = 119.; 
+
+  TString leg1_BF = "MUON_Mu17_BF_TRIGGER_ISR";
+  TString leg2_BF = "MUON_Mu8_BF_TRIGGER_ISR";
+  if(GetCorrectionHist(leg1_BF.Data())){
+  float sf1_BF = GetCorrectionHist(leg1_BF.Data())->GetBinContent(GetCorrectionHist(leg1_BF.Data())->FindBin( fabs(mu.at(0).Eta()), l1pt) );
+  float sf2_BF = GetCorrectionHist(leg2_BF.Data())->GetBinContent(GetCorrectionHist(leg2_BF.Data())->FindBin( fabs(mu.at(1).Eta()), l2pt) );
+
+  double sferr1_BF = GetCorrectionHist(leg1_BF.Data())->GetBinError(GetCorrectionHist(leg1_BF.Data())->FindBin( fabs(mu.at(0).Eta()), l1pt) );
+  double sferr2_BF = GetCorrectionHist(leg2_BF.Data())->GetBinError(GetCorrectionHist(leg2_BF.Data())->FindBin( fabs(mu.at(1).Eta()), l2pt) );
+  sf_BF = sf1_BF * sf2_BF;
+  }
+
+  TString leg1_GH = "MUON_Mu17_GH_TRIGGER_ISR";
+  TString leg2_GH = "MUON_Mu8_GH_TRIGGER_ISR";
+  if(GetCorrectionHist(leg1_GH.Data())){
+  float sf1_GH = GetCorrectionHist(leg1_GH.Data())->GetBinContent(GetCorrectionHist(leg1_GH.Data())->FindBin( fabs(mu.at(0).Eta()), l1pt) );
+  float sf2_GH = GetCorrectionHist(leg2_GH.Data())->GetBinContent(GetCorrectionHist(leg2_GH.Data())->FindBin( fabs(mu.at(1).Eta()), l2pt) );
+
+  double sferr1_GH = GetCorrectionHist(leg1_GH.Data())->GetBinError(GetCorrectionHist(leg1_GH.Data())->FindBin( fabs(mu.at(0).Eta()), l1pt) );
+  double sferr2_GH = GetCorrectionHist(leg2_GH.Data())->GetBinError(GetCorrectionHist(leg2_GH.Data())->FindBin( fabs(mu.at(1).Eta()), l2pt) );
+  sf_GH = sf1_GH * sf2_GH;
+  }
+  return (sf_BF * lumi_BF + sf_GH * lumi_GH)/total_lumi;
+}
+
+double  MCDataCorrections::GetDoubleEGTriggerEffISR(vector<snu::KElectron> el){
+
+  if(corr_isdata) return 1.;
+
+  // FIXME temporary only two electron case
+    TString leg1 = "ELECTRON_ELE23_TRIGGER_ISR";
+    TString leg2 = "ELECTRON_ELE12_TRIGGER_ISR";
+    if(GetCorrectionHist(leg1.Data())){
+    float sf1 = GetCorrectionHist(leg1.Data())->GetBinContent(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
+    float sf2 = GetCorrectionHist(leg2.Data())->GetBinContent(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
+
+    double sferr1 = GetCorrectionHist(leg1.Data())->GetBinError(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
+    double sferr2 = GetCorrectionHist(leg2.Data())->GetBinError(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
+    std::cout << "sf1: " << sf1 << "sferr1: " << sferr1 << std::endl;
+    return  sf1*sf2;
+    }
+
+
+  //// https://twiki.cern.ch/twiki/pub/CMS/HWW2016TriggerAndIdIsoScaleFactorsResults/AN-16-172_temp.pdf
+  //if(el.size() <  2.) return 0.;
+  //if(el.size() == 2.){
+  //  double eff_tl = GetEffDEG1(el[0]) * GetEffDEG2(el[1]);
+  //  double eff_lt = GetEffDEG2(el[0]) * GetEffDEG1(el[1]);
+
+  //  double evt_eff = eff_tl + (1. - eff_lt) * eff_tl;
+  //  return evt_eff;
+  //}
+  ///// This is approx correct to set nel > 2 as same form for nel=2 (Fix for correct form. when time permitss)
+  //double eff_tl = GetEffDEG1(el[0]) * GetEffDEG2(el[1]);
+  //double eff_lt = GetEffDEG2(el[0]) * GetEffDEG1(el[1]);
+
+  //double evt_eff = eff_tl + (1. - eff_lt) * eff_tl;
+  //return evt_eff;
+
+
+  return 1.;
+}
+
 double  MCDataCorrections::GetDoubleEGTriggerEff(vector<snu::KElectron> el){
   
   if(corr_isdata) return 1.;

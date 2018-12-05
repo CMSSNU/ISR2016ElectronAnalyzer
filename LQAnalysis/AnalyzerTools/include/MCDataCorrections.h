@@ -65,6 +65,8 @@ class MCDataCorrections{
   double GetEffDEG2(snu::KElectron el);
 
   double GetDoubleEGTriggerEff(std::vector<snu::KElectron> el);
+  double GetDoubleEGTriggerEffISR(std::vector<snu::KElectron> el);
+  double GetDoubleMUTriggerEffISR(std::vector<snu::KMuon> mu);
 
 
 

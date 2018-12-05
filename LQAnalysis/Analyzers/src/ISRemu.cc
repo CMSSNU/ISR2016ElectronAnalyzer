@@ -141,7 +141,7 @@ void ISRemu::ExecuteEvents()throw( LQError ){
 
  
   if(is_emuEvent && trig_pass){
-    if ((electrons.at(0).Charge() == (-muons.at(0).Charge())) ){ // opposite sign emu
+    if ((electrons.at(0).Charge() == (-muons.at(0).Charge())) && (muons.at(0).RelIso04() > 0.15)){ // opposite sign emu
        if(electrons.at(0).Pt() > 26 && muons.at(0).Pt() > 26 && fabs(electrons.at(0).Eta()) < 2.4 && fabs(muons.at(0).Eta()) < 2.4){
          TLorentzVector emu = electrons.at(0) + muons.at(0);
          double dimass = emu.M();
@@ -168,18 +168,18 @@ void ISRemu::ExecuteEvents()throw( LQError ){
               if(dimass > massBinBoundaries[i] && dimass < massBinBoundaries[i+1]){
     
                 // dilepton pt for each mass bin
-                FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1,dipt,weight*weigtbytrig, dipt_min, dipt_max, ndipt);
-                FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1,dimass,weight*weigtbytrig, dimass_min, dimass_max, ndimass);
+                FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1,dipt,weight*weigtbytrig*pileup_reweight, dipt_min, dipt_max, ndipt);
+                FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1,dimass,weight*weigtbytrig*pileup_reweight, dimass_min, dimass_max, ndimass);
 
                 // medium B
                 if(bjets_medium.size()==0){
-                FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_mediumBveto",dipt,weight*weigtbytrig, dipt_min, dipt_max, ndipt);
-                FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_mediumBveto",dimass,weight*weigtbytrig, dimass_min, dimass_max, ndimass);
+                FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_mediumBveto",dipt,weight*weigtbytrig*pileup_reweight, dipt_min, dipt_max, ndipt);
+                FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_mediumBveto",dimass,weight*weigtbytrig*pileup_reweight, dimass_min, dimass_max, ndimass);
                 }
 
                 if(bjets_medium.size()>=1){
-                FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_mediumBcontrol",dipt,weight*weigtbytrig, dipt_min, dipt_max, ndipt);
-                FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_mediumBcontrol",dimass,weight*weigtbytrig, dimass_min, dimass_max, ndimass);
+                FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_mediumBcontrol",dipt,weight*weigtbytrig*pileup_reweight, dipt_min, dipt_max, ndipt);
+                FillHist(prefix+"dielectronmass_"+massbins[i]+postfix1+"_mediumBcontrol",dimass,weight*weigtbytrig*pileup_reweight, dimass_min, dimass_max, ndimass);
                 }
 
               }

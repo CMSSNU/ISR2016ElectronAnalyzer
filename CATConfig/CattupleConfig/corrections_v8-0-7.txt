@@ -4,6 +4,7 @@
 ### EL_RECO IDFILEDIR egammaEffi.txt_EGM2D_reco.root EGamma_SF2D  TH2F 
 ### ID_ELECTRON_POG_TIGHT IDFILEDIR egammaEffi.txt_EGM2D_tight.root EGamma_SF2D TH2F
 ### ID_ELECTRON_POG_MEDIUM IDFILEDIR egammaEffi.txt_EGM2D_medium.root EGamma_SF2D TH2F
+### ID_ELECTRONISR_POG_MEDIUM IDFILEDIR egammaEffi.txt_EGM2D_mediumISR.root EGamma_SF2D TH2F
 ### ID_ELECTRON_POG_LOOSE  IDFILEDIR egammaEffi.txt_EGM2D_loose.root EGamma_SF2D TH2F
 ### ID_ELECTRON_POG_VETO  IDFILEDIR egammaEffi.txt_EGM2D_veto.root EGamma_SF2D TH2F
 ### ID_ELECTRON_MVA_90   IDFILEDIR mva90.root  EGamma_SF2D TH2F
@@ -61,4 +62,10 @@
 ### ELECTRON_El17_VTXREWEIGHT  PILEUPFILEDIR Nvtx_reweight_single_electron.root  HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v_ZPeak_Nvtx_data  TH1D
 ### ELECTRON_El12_VTXREWEIGHT  PILEUPFILEDIR Nvtx_reweight_single_electron.root  HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v_ZPeak_Nvtx_data  TH1D
 ### ELECTRON_El8_VTXREWEIGHT  PILEUPFILEDIR Nvtx_reweight_single_electron.root  HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v_ZPeak_Nvtx_data  TH1D
+### ELECTRON_ELE23_TRIGGER_ISR TRIGGERFILEDIR ElectronTriggerSF_Ele23_CaloIdL_TrackIdL_IsoVL_ISR.root EGamma_SF2D TH2F
+### ELECTRON_ELE12_TRIGGER_ISR TRIGGERFILEDIR ElectronTriggerSF_Ele12_CaloIdL_TrackIdL_IsoVL_ISR.root EGamma_SF2D TH2F
+### MUON_Mu17_BF_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_DoubleIsoMu17Mu8_IsoMu17leg_RunBCDEF.root TriggerEff_ISR_BCDEF_SF TH2F
+### MUON_Mu8_BF_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_Mu8_OR_TkMu8_RunBCDEF.root TriggerEff_ISR_BCDEF_SF TH2F
+### MUON_Mu17_GH_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_DoubleIsoMu17Mu8_IsoMu17leg_RunGH.root TriggerEff_ISR_GH_SF TH2F
+### MUON_Mu8_GH_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_Mu8_OR_TkMu8_RunGH.root TriggerEff_ISR_GH_SF TH2F
 #END
