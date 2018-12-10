@@ -1,10 +1,10 @@
 #sktree -a ISRee -S DoubleEG  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
 #sktree -a ISRee -S DoubleEG -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
-#sktree -a ISRee -list isr_dy_list -s FLATCAT -n 50 
+sktree -a ISRee -list isr_dy_list -s FLATCAT -n 1 
 
-sktree -a ISRmumu -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
+#sktree -a ISRmumu -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
 #sktree -a ISRmumu -S DoubleMuon  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
-sktree -a ISRmumu -list isr_dy_list -s FLATCAT -n 50 
+#sktree -a ISRmumu -list isr_dy_list -s FLATCAT -n 50 
 
 #sktree -a ISRee_unfolding -S DoubleEG  -list isr_bkg_list -s SKTree_DiLepSkim -n 50 
 #sktree -a ISRee_unfolding -list isr_dy_list -s FLATCAT -n 50 

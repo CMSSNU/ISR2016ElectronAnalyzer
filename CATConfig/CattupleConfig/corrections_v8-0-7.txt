@@ -62,10 +62,12 @@
 ### ELECTRON_El17_VTXREWEIGHT  PILEUPFILEDIR Nvtx_reweight_single_electron.root  HLT_Ele17_CaloIdL_TrackIdL_IsoVL_PFJet30_v_ZPeak_Nvtx_data  TH1D
 ### ELECTRON_El12_VTXREWEIGHT  PILEUPFILEDIR Nvtx_reweight_single_electron.root  HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v_ZPeak_Nvtx_data  TH1D
 ### ELECTRON_El8_VTXREWEIGHT  PILEUPFILEDIR Nvtx_reweight_single_electron.root  HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v_ZPeak_Nvtx_data  TH1D
-### ELECTRON_ELE23_TRIGGER_ISR TRIGGERFILEDIR ElectronTriggerSF_Ele23_CaloIdL_TrackIdL_IsoVL_ISR.root EGamma_SF2D TH2F
+### ELECTRON_ELE23_TRIGGER_ISR TRIGGERFILEDIR ElectronTriggerSF_Ele23_CaloIdL_TrackIdL_IsoVL_ISR_L1seed.root EGamma_SF2D TH2F
 ### ELECTRON_ELE12_TRIGGER_ISR TRIGGERFILEDIR ElectronTriggerSF_Ele12_CaloIdL_TrackIdL_IsoVL_ISR.root EGamma_SF2D TH2F
 ### MUON_Mu17_BF_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_DoubleIsoMu17Mu8_IsoMu17leg_RunBCDEF.root TriggerEff_ISR_BCDEF_SF TH2F
 ### MUON_Mu8_BF_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_Mu8_OR_TkMu8_RunBCDEF.root TriggerEff_ISR_BCDEF_SF TH2F
 ### MUON_Mu17_GH_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_DoubleIsoMu17Mu8_IsoMu17leg_RunGH.root TriggerEff_ISR_GH_SF TH2F
 ### MUON_Mu8_GH_TRIGGER_ISR TRIGGERFILEDIR MuonTriggerSF_ISR_Mu8_OR_TkMu8_RunGH.root TriggerEff_ISR_GH_SF TH2F
+### PHOTON_L1PREFIRING L1PREFIRINGDIR L1PrefiringMaps_new.root L1prefiring_photonptvseta_2016BtoH TH2F
+### JET_L1PREFIRING L1PREFIRINGDIR L1PrefiringMaps_new.root L1prefiring_jetptvseta_2016BtoH TH2F
 #END

@@ -293,6 +293,7 @@ export LUMIFILEDIR=${LQANALYZER_DIR}/data/Luminosity/80X/
 export TRIGGERFILEDIR=${LQANALYZER_DIR}/data/Trigger/80X/
 export BTAGFILEDIR=${LQANALYZER_DIR}/data/BTag/80X/
 export PILEUPFILEDIR=${LQANALYZER_DIR}/data/Pileup/80X/
+export L1PREFIRINGDIR=${LQANALYZER_DIR}/data/L1Prefiring/
 
 
 

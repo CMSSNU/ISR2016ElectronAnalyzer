@@ -64,6 +64,8 @@ class MCDataCorrections{
   double GetEffDEG1(snu::KElectron el);
   double GetEffDEG2(snu::KElectron el);
 
+  double GetPrefiringRate( double eta, double pt, TString h_name, int fluctuation);
+  double GetL1ECALPrefiringWeight(std::vector<snu::KPhoton> photons, std::vector<snu::KJet> jets);
   double GetDoubleEGTriggerEff(std::vector<snu::KElectron> el);
   double GetDoubleEGTriggerEffISR(std::vector<snu::KElectron> el);
   double GetDoubleMUTriggerEffISR(std::vector<snu::KMuon> mu);

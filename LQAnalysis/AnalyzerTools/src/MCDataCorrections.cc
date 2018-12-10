@@ -624,6 +624,95 @@ double MCDataCorrections::TriggerScaleFactorPeriodDependant( vector<snu::KElectr
 
 }
 
+double MCDataCorrections::GetPrefiringRate( double eta, double pt, TString h_name, int fluctuation){
+
+  //if(h_prefmap==0) return 0.;
+  //Check pt is not above map overflow
+
+  TH2F * h_prefmap = GetCorrectionHist(h_name.Data());
+  int nbinsy = h_prefmap->GetNbinsY();
+  double maxy= h_prefmap->GetYaxis()->GetBinLowEdge(nbinsy+1);
+  if(pt>=maxy) pt = maxy-0.01;
+
+  int thebin= h_prefmap->FindBin(eta,pt);
+
+  double prefrate =  h_prefmap->GetBinContent(thebin);
+
+  //if(fluctuation == up) prefrate = TMath::Min(TMath::Max(prefrate +  h_prefmap->GetBinError(thebin), (1.+prefiringRateSystUnc_)*prefrate),1.);
+  //if(fluctuation == down) prefrate = TMath::Max(TMath::Min(prefrate -  h_prefmap->GetBinError(thebin), (1.-prefiringRateSystUnc_)*prefrate),0.);
+
+  return prefrate;
+
+
+}
+
+double MCDataCorrections::GetL1ECALPrefiringWeight(vector<snu::KPhoton> photons, vector<snu::KJet> jets){
+
+   //Probability for the event NOT to prefire, computed with the prefiring maps per object. 
+   //Up and down values correspond to the resulting value when shifting up/down all prefiring rates in prefiring maps. 
+   double NonPrefiringProba[3]={1.,1.,1.};//0: central, 1: up, 2: down
+
+   TString h_prefmap_photon = "PHOTON_L1PREFIRING";
+
+   for(int fluct = 0; fluct<3;fluct++) {
+     //Start by applying the prefiring maps to photons in the affected regions. 
+     std::vector < snu::KPhoton > affectedphotons;
+     for( std::vector<snu::KPhoton>::const_iterator photon = photons.begin(); photon != photons.end(); photon++ ) {
+       double pt_gam= (&*photon)->Pt();
+       double eta_gam=  (&*photon)->Eta();
+       if( pt_gam < 20.) continue;
+       if( fabs(eta_gam) <2.) continue;
+       if( fabs(eta_gam) >3.) continue;
+       affectedphotons.push_back((*photon));
+       double prefiringprob_gam=  GetPrefiringRate( eta_gam, pt_gam, h_prefmap_photon, fluct);
+       NonPrefiringProba[fluct] *= (1.-prefiringprob_gam);
+     }
+
+
+
+     //Now applying the prefiring maps to jets in the affected regions. 
+     for( std::vector<snu::KJet>::const_iterator jet = (jets).begin(); jet != (jets).end(); jet++ ) {
+
+       double pt_jet= (&*jet)->Pt();
+       double eta_jet=  (&*jet)->Eta();
+       double phi_jet=  (&*jet)->Phi();
+       if( pt_jet < 20.) continue;
+       if( fabs(eta_jet) <2.) continue;
+       if( fabs(eta_jet) >3.) continue;
+
+       //Loop over photons to remove overlap
+       double nonprefiringprobfromoverlappingphotons =1.;
+       for( std::vector<snu::KPhoton>::const_iterator photon = affectedphotons.begin(); photon != affectedphotons.end(); photon++ ) {
+         double pt_gam= (&*photon)->Pt();
+         double eta_gam=  (&*photon)->Eta();
+         double phi_gam=  (&*photon)->Phi();
+         double dR = sqrt(pow(eta_jet-eta_gam,2)+pow(phi_jet-phi_gam,2)); //reco::deltaR( eta_jet,phi_jet,eta_gam,phi_gam );
+         if(dR>0.4)continue;
+         double prefiringprob_gam =  GetPrefiringRate( eta_gam, pt_gam, h_prefmap_photon , fluct);
+         nonprefiringprobfromoverlappingphotons  *= (1.-prefiringprob_gam) ;
+       }
+
+
+       TString h_prefmap_jet = "JET_L1PREFIRING";
+       double prefiringprob_jet = GetPrefiringRate( eta_jet, pt_jet , h_prefmap_jet , fluct);
+       //useEMpt =true if one wants to use maps parametrized vs Jet EM pt instead of pt.
+       double nonprefiringprobfromoverlappingjet =(1.-prefiringprob_jet);
+       //If there are no overlapping photons, just multiply by the jet non prefiring rate
+       if(nonprefiringprobfromoverlappingphotons ==1.)    NonPrefiringProba[fluct]*= (1.-prefiringprob_jet);
+       //If overlapping photons have a non prefiring rate larger than the jet, then replace these weights by the jet one
+       else if(nonprefiringprobfromoverlappingphotons > nonprefiringprobfromoverlappingjet ) {
+         if(nonprefiringprobfromoverlappingphotons !=0.)NonPrefiringProba[fluct]*= nonprefiringprobfromoverlappingjet /nonprefiringprobfromoverlappingphotons;
+         else NonPrefiringProba[fluct]=0.;
+       }
+       //If overlapping photons have a non prefiring rate smaller than the jet, don't consider the jet in the event weight
+       else if(nonprefiringprobfromoverlappingphotons < nonprefiringprobfromoverlappingjet ) NonPrefiringProba[fluct]*=1.;
+     }
+
+   }
+
+  return NonPrefiringProba[0];
+}
+
 double  MCDataCorrections::GetDoubleMUTriggerEffISR(vector<snu::KMuon> mu){
 
   double lumi_periodB = 5.929001722;
@@ -684,7 +773,6 @@ double  MCDataCorrections::GetDoubleEGTriggerEffISR(vector<snu::KElectron> el){
 
     double sferr1 = GetCorrectionHist(leg1.Data())->GetBinError(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
     double sferr2 = GetCorrectionHist(leg2.Data())->GetBinError(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
-    std::cout << "sf1: " << sf1 << "sferr1: " << sferr1 << std::endl;
     return  sf1*sf2;
     }
 

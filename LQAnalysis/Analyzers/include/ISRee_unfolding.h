@@ -27,10 +27,12 @@ class ISRee_unfolding : public AnalyzerCore {
   std::vector<snu::KMuon> out_muons;
   std::vector<snu::KElectron> out_electrons;
 
+  // https://github.com/CMSSNU/ISR2016MuonAnalyzer/blob/master/LQAnalysis/Analyzers/include/ISR2016MuonAnalyzer.h#L30
   std::vector<Double_t> etaRec,ptRec,mRec;
   std::vector<Double_t> etaGen,ptGen,mGen;
-  Double_t weight_, weightTotal;
-  Int_t istriggered,issignal, DYtautau;
+  std::vector<Double_t> ptPreFSR,mPreFSR;
+  Double_t weightGen, weightTotal;
+  Int_t isfiducialGen,ispassRec,isfiducialPreFSR,DYtautau;
 
   ClassDef ( ISRee_unfolding, 1);
 };

@@ -70,7 +70,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
   vector<TString> trignames;
   trignames.push_back(dielectron_trig);
 
-  bool event_m80to100 = false;
   double weigtbytrig = WeightByTrigger(dielectron_trig,TargetLumi);
 
   // Mass boundaries  
@@ -148,7 +147,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
           genl2_preFSR+=truth;
         }
       }
-
     }
    
     //Fill generator level hists, if we find both electron  and anti-electron
@@ -163,7 +161,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
       if(gendimass > 80. && gendimass < 100.){ 
          FillCutFlow("NoCut", 1.); 
         if((genl1_preFSR.Pt()> 25 && genl2_preFSR.Pt()> 15)||(genl2_preFSR.Pt()> 25 && genl1_preFSR.Pt()> 15) && fabs(genl1_preFSR.Eta()) < 2.4 && fabs(genl2_preFSR.Eta()) < 2.4 && gendipt < 100.){
-          event_m80to100 = true;
           FillCutFlow("GenKinCut", 1.); 
         }
       }
@@ -184,27 +181,13 @@ void ISRee::ExecuteEvents()throw( LQError ){
       if(postfix_preFSR.Contains("m")) FillHist("gendipt_preFSR_"+postfix_preFSR,gendy.Pt(),weight*weigtbytrig,0.,100.,100);
       if(gendy.Pt() < 100 && postfix_preFSR.Contains("m")) FillHist("gendimass_preFSR_"+postfix_preFSR,gendy.M(),weight*weigtbytrig,0.,500.,1000);
 
-
-      // make 2D histogram of lep1 and lep2 for each mass range
-      if(postfix_preFSR.Contains("m")) FillHist("preFSR_"+postfix_preFSR+"_l1pt_l2pt",genl1_preFSR.Pt(), genl2_preFSR.Pt(),weight*weigtbytrig,0.,200.,200, 0.,200.,200);
-
       if( fabs(genl1_preFSR.Eta()) < 2.4 && fabs(genl2_preFSR.Eta()) < 2.4 ){
-         // make 2D histogram of lep1 and lep2 for each mass range with eta cut
-         if(postfix_preFSR.Contains("m")) FillHist("preFSR_"+postfix_preFSR+"_l1pt_l2pt_etacut",genl1_preFSR.Pt(), genl2_preFSR.Pt(),weight*weigtbytrig,0.,200.,200, 0.,200.,200);
  
          if( (genl1_preFSR.Pt() > 25 && genl2_preFSR.Pt() > 15) || (genl1_preFSR.Pt() > 15 && genl2_preFSR.Pt() > 25)){
+
             FillHist("gendipt_etaCut_25_15_preFSR",gendy.Pt(),weight*weigtbytrig,0.,100.,100);
-
-            // make 2D histogram of lep1 and lep2 for each mass range with eta/pt cut
-            if(postfix_preFSR.Contains("m")) FillHist("preFSR_"+postfix_preFSR+"_l1pt_l2pt_etacut_ptcut",genl1_preFSR.Pt(), genl2_preFSR.Pt(),weight*weigtbytrig,0.,200.,200, 0.,200.,200);
-
             if(postfix_preFSR.Contains("m")) FillHist("gendipt_etaCut_25_15_preFSR_"+postfix_preFSR,gendy.Pt(),weight*weigtbytrig,0.,100.,100);
             if(gendy.Pt() < 100 && postfix_preFSR.Contains("m")) FillHist("gendimass_etaCut_25_15_preFSR_"+postfix_preFSR,gendy.M(),weight*weigtbytrig,0.,500.,1000);
-         }
-         if( (genl1_preFSR.Pt() > 20 && genl2_preFSR.Pt() > 10) || (genl1_preFSR.Pt() > 10 && genl2_preFSR.Pt() > 20)){
-            FillHist("gendipt_etaCut_25_15_preFSR",gendy.Pt(),weight*weigtbytrig,0.,100.,100);
-            if(postfix_preFSR.Contains("m")) FillHist("gendipt_etaCut_20_10_preFSR_"+postfix_preFSR,gendy.Pt(),weight*weigtbytrig,0.,100.,100);
-            if(gendy.Pt() < 100 && postfix_preFSR.Contains("m")) FillHist("gendimass_etaCut_20_10_preFSR_"+postfix_preFSR,gendy.M(),weight*weigtbytrig,0.,500.,1000);
          }
       }
 
@@ -314,12 +297,10 @@ void ISRee::ExecuteEvents()throw( LQError ){
     FillHist("Nvtx_nocut_mc_pureweight",  eventbase->GetEvent().nVertices() ,weight*pileup_reweight, 0. , 50., 50);
   }  
   if(!PassMETFilter()) return;     /// Initial event cuts : 
-  if(event_m80to100) FillCutFlow("METfilter", 1.);
   FillHist("Basic_METFilter_Cut", 1, weight, 0.,2.,2);
   /// #### CAT::: triggers stored are all HLT_Ele/HLT_DoubleEle/HLT_Mu/HLT_TkMu/HLT_Photon/HLT_DoublePhoton
   
   if(!eventbase->GetEvent().HasGoodPrimaryVertex()) return; //// Make cut on event wrt vertex                                                                               
-  if(event_m80to100) FillCutFlow("GoodPV", 1.);
   FillHist("NonZero_Nvtx", 1, weight, 0.,2.,2);
   
   std::vector<snu::KElectron> electrons =  GetElectrons(true,true, "ELECTRON_POG_MEDIUM"); // Cut Based POG Medium WP 
@@ -339,12 +320,15 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
   bool is_doubleelectron = (electrons.size() == 2);
 
-  if(trig_pass) {
-    if(event_m80to100) FillCutFlow("Trigger",1.);
-  }
- 
   // medium working point pog id without ip cuts
   if(is_doubleelectron){
+
+  std::vector<snu::KPhoton> photons = eventbase->GetPhotons();
+  std::vector<snu::KJet> jets = eventbase->GetJets();
+
+  double l1prefireweight = 1.;
+  if(!isData)  l1prefireweight = mcdata_correction->GetL1ECALPrefiringWeight(photons, jets);
+  std::cout << "l1prefireweight: " << l1prefireweight << std::endl;
 
   std::vector<snu::KElectron> electron_leading;
   std::vector<snu::KElectron> electron_subleading;
@@ -356,8 +340,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
   double recosf_lead = mcdata_correction->ElectronRecoScaleFactor(electron_leading, 0);
   double recosf_sublead = mcdata_correction->ElectronRecoScaleFactor(electron_subleading, 0);
 
-   if(event_m80to100 && trig_pass) FillCutFlow("TwoPOGEle",1.); 
-   
    bool is_os = (electrons.at(0).Charge() == (-electrons.at(1).Charge()));
    FillHist("os_cut", 1, weight, 0.,2.,2);
 
@@ -384,13 +366,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
    double lepeta_min = -2.5, lepeta_max = 2.5;
    int neta = 50;
 
-     if( trig_pass && TriggerMatch1){
-       if(event_m80to100) FillCutFlow("trigger_match",1.);
-     }
-
-     if( is_os && trig_pass && TriggerMatch1){
-       if(event_m80to100) FillCutFlow("OS",1.);
-     }
    // temporary kinematic cut
 
    TString postfix1="_asymptcut";
@@ -410,7 +385,6 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
    // Kinematic cuts from 2016 DY x-section
    if(trig_pass && is_os && TriggerMatch1 && ptlep1 > 25. && ptlep2 > 15. && fabs(etalep1) < 2.5 && fabs(etalep2) < 2.5 && dipt < 100.){
-       if(event_m80to100) FillCutFlow("recoKincuts",1.);
 
             if( dimass > 40. && dimass < 350.){
                // dilepton pt for each mass bin

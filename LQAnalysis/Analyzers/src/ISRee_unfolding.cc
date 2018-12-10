@@ -61,92 +61,94 @@ void ISRee_unfolding::InitialiseAnalysis() throw( LQError ) {
   return;
 }
 
-
 void ISRee_unfolding::ExecuteEvents()throw( LQError ){
 
-  // double electron trigger
-  TString dielectron_trig="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v";//
+ // double electron trigger
+ TString dielectron_trig="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v";//
 
-  vector<TString> trignames;
-  trignames.push_back(dielectron_trig);
+ vector<TString> trignames;
+ trignames.push_back(dielectron_trig);
 
-  double weigtbytrig = WeightByTrigger(dielectron_trig,TargetLumi);
+ double weigtbytrig = WeightByTrigger(dielectron_trig,TargetLumi);
 
-  // Mass boundaries  
-  double massBinBoundaries[] = {40., 50., 60., 80., 100., 200., 350};
-  const int nBoundaries = sizeof(massBinBoundaries)/sizeof(double); 
+ /// Apply the gen weight 
+ if(!isData) weight*=MCweight;
+ weightGen=weight*weigtbytrig;
 
-  vector<TString> massbins;
-  massbins.push_back("m40to50");
-  massbins.push_back("m50to60");
-  massbins.push_back("m60to80");
-  massbins.push_back("m80to100");
-  massbins.push_back("m100to200");
-  massbins.push_back("m200to350");
-  massbins.push_back("m350to2000");
+ // Get generator information for gen/reco ratio correction (only for Drell-Yan MC).
+ // For this, we needs full-phase space generator level information.
+ // So, You should run this with FLATCAT.
+ if(k_sample_name.Contains("DY")){  //only for Drell-Yan MC
+   std::vector<snu::KTruth> truthcol =  eventbase->GetTruth();   //get truth particles
+   TLorentzVector gendy,genl1,genl2,genl1pre,genl2pre;   //gendy: Z/gamma* fourvector, genl1: electron fourvector, genl2: anti-electron fourvector
+   int truthsize=truthcol.size();
 
-  /// Apply the gen weight 
-  if(!isData) weight*=MCweight;
+   //loop for collect dielectron Drell-Yan product
+   for(int i=0;i<truthsize;i++){
+     snu::KTruth truth=truthcol.at(i);
+     if(truth.GenStatus()!=1) continue;  //stable-particle-requirement
+     if(truth.PdgId()==11&&truth.StatusFlag(snu::KTruth::fromhardprocess)){
+       genl1+=truth;
+     }
+     else if(truth.PdgId()==-11&&truth.StatusFlag(snu::KTruth::fromhardprocess)){
+       genl2+=truth;
+     }
+     else if(truth.PdgId()==22){   //collect photons from DY muons by FSR
+       int imother=truth.IndexMother();
+       if(imother>=truthsize) continue;
+       snu::KTruth mother=truthcol.at(truth.IndexMother());
+       if(mother.PdgId()==11&&mother.StatusFlag(snu::KTruth::fromhardprocess)){
+         genl1pre+=truth; //collect photons first, then later add to post fsr lepton i.e., gen1 or gen2
+       }else if(mother.PdgId()==-11&&mother.StatusFlag(snu::KTruth::fromhardprocess)){
+         genl2pre+=truth;
+       }
+     }
+   }
+   genl1pre+=genl1;
+   genl2pre+=genl2;
+   gendy=genl1pre+genl2pre;
+   
+   if(genl1!=TLorentzVector(0,0,0,0)&&genl2!=TLorentzVector(0,0,0,0)){
 
-  // Get generator information for gen/reco ratio correction (only for Drell-Yan MC).
-  // For this, we needs full-phase space generator level information.
-  // So, You should run this with FLATCAT.
-  if(k_sample_name.Contains("DY")){  //only for Drell-Yan MC
-    std::vector<snu::KTruth> truthcol =  eventbase->GetTruth();   //get truth particles
-    TLorentzVector gendy,genl1,genl2;   //gendy: Z/gamma* fourvector, genl1: electron fourvector, genl2: anti-electron fourvector
-    TLorentzVector gendy_postFSR,genl1_postFSR,genl2_postFSR;   
-    int truthsize=truthcol.size();
+     double gendimass = gendy.M();  
+     double gendipt = gendy.Pt();
+     double genl1pt = genl1.Pt();
+     double genl2pt = genl2.Pt();
+     double genl1eta = genl1.Eta();
+     double genl2eta = genl2.Eta();
+     double genl1mass = genl1.M();
+     double genl2mass = genl2.M();
+     if(genl1pt<genl2pt){
+       double temppt=genl2pt; 
+       double tempeta=genl2eta;
+       double tempmass=genl2mass;
+       genl2pt=genl1pt;
+       genl2eta=genl1eta;
+       genl2mass=genl1mass;
+       genl1pt=temppt;
+       genl1eta=tempeta;
+       genl1mass=tempmass;
+     }
 
-    //loop for collect dimuon Drell-Yan product
-    for(int i=0;i<truthsize;i++){
-      snu::KTruth truth=truthcol.at(i);
-      if(truth.GenStatus()!=1) continue;  //stable-particle-requirement
-      if(truth.PdgId()==11&&truth.StatusFlag(snu::KTruth::fromhardprocess)){
-	genl1+=truth;
-	gendy+=truth;
-        genl1_postFSR+=truth;
-	gendy_postFSR+=truth;
-      }
-      else if(truth.PdgId()==-11&&truth.StatusFlag(snu::KTruth::fromhardprocess)){
-	genl2+=truth;
-	gendy+=truth;
-	genl2_postFSR+=truth;
-	gendy_postFSR+=truth;
-      }
-      else if(truth.PdgId()==22){   //collect photons from DY muons by FSR
-	int imother=truth.IndexMother();
-	if(imother>=truthsize) continue;
-	snu::KTruth mother=truthcol.at(truth.IndexMother());
-	if(abs(mother.PdgId())==11&&mother.StatusFlag(snu::KTruth::fromhardprocess)){
-	  gendy+=truth;
-	}
-      }
-    }
-    
-    if(genl1!=TLorentzVector(0,0,0,0)&&genl2!=TLorentzVector(0,0,0,0)){
-
-      weight_ = weight*weigtbytrig;
-      ptGen.push_back(genl1.Pt()); // FIXME
-      ptGen.push_back(genl2.Pt());
-      ptGen.push_back((gendy_postFSR).Pt());
-
+      ///////for unfolding///////
+      ptPreFSR.push_back(genl1pre.Pt());
+      ptPreFSR.push_back(genl2pre.Pt());
+      ptPreFSR.push_back(gendipt);
+      mPreFSR.push_back(genl1pre.M());
+      mPreFSR.push_back(genl2pre.M());
+      mPreFSR.push_back(gendimass);
+      ptGen.push_back(genl1pt);
+      ptGen.push_back(genl2pt);
+      ptGen.push_back((genl1+genl2).Pt());
       mGen.push_back(0.000511);
       mGen.push_back(0.000511);
-      mGen.push_back((gendy_postFSR).M());
+      mGen.push_back((genl1+genl2).M());
 
-      if(fabs(genl1_postFSR.Eta()) < 2.4 && fabs(genl2_postFSR.Eta()) < 2.4){
-         if((genl1_postFSR.Pt() > 25 && genl2_postFSR.Pt() > 15)||(genl2_postFSR.Pt() > 25 && genl1_postFSR.Pt() > 15)){
-            issignal = 1;
-
-            //weight_ = weight*weigtbytrig;
-            //ptGen.push_back(genl1.Pt()); // FIXME
-            //ptGen.push_back(genl2.Pt());
-            //ptGen.push_back((gendy_postFSR).Pt());
-
-            //mGen.push_back(0.000511);
-            //mGen.push_back(0.000511);
-            //mGen.push_back((gendy_postFSR).M());
-         }
+      if((genl1pre.Pt()>25||genl2pre.Pt()>25)&&(genl1pre.Pt()>15&&genl2pre.Pt()>15)&&fabs(genl1pre.Eta())<2.5&&fabs(genl2pre.Eta())<2.5){
+	isfiducialPreFSR = 1;
+      }
+      if(genl1pt>25&&genl2pt>15&&fabs(genl1eta)<2.5&&fabs(genl2eta)<2.5){
+	isfiducialGen = 1;
       }
     }
   }
@@ -157,16 +159,11 @@ void ISRee_unfolding::ExecuteEvents()throw( LQError ){
   }
   
   std::vector<snu::KElectron> electrons =  GetElectrons(true,true, "ELECTRON_POG_MEDIUM"); // Cut Based POG Medium WP 
-
   bool trig_pass= PassTriggerOR(trignames);
 
-  double idsf = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 0);
+  double idsf = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electrons, 0);
   double recosf = mcdata_correction->ElectronRecoScaleFactor(electrons, 0);
-
   bool is_doubleelectron = (electrons.size() == 2);
-
-  double dimass_min = 0., dimass_max = 500.;
-  int ndimass = 1000;
 
   if(PassMETFilter()){     /// Initial event cuts : 
      if(eventbase->GetEvent().HasGoodPrimaryVertex()){ //// Make cut on event wrt vertex                                                                               
@@ -175,51 +172,39 @@ void ISRee_unfolding::ExecuteEvents()throw( LQError ){
         if(is_doubleelectron){
         
           bool is_os = (electrons.at(0).Charge() == (-electrons.at(1).Charge()));
-          FillHist("os_cut", 1, weight, 0.,2.,2);
 
-          double ptlep1 = electrons[0].Pt();
-          double ptlep2 = electrons[1].Pt();
-          double etalep1 = electrons[0].Eta();
-          double etalep2 = electrons[1].Eta();
+          double trig_sf = 1.;
+          if(!isData) trig_sf = mcdata_correction->GetDoubleEGTriggerEffISR(electrons);
+
+          double l1pt = electrons[0].Pt();
+          double l2pt = electrons[1].Pt();
+          double l1eta = electrons[0].Eta();
+          double l2eta = electrons[1].Eta();
+          double l1mass = electrons[0].M();
+          double l2mass = electrons[1].M();
           double dipt = (electrons[0]+electrons[1]).Pt();
+          double dieta = (electrons[0]+electrons[1]).Eta();
           double dimass = (electrons[0]+electrons[1]).M();
           bool TriggerMatch1 = (electrons[0].TriggerMatched(dielectron_trig) && electrons[1].TriggerMatched(dielectron_trig));
 
           bool mcfromtau = (electrons[0].MCFromTau()||electrons[1].MCFromTau()); // is there case only one of the lepton decaying from tau in DY sample?
-          TString prefix="";
-          if(mcfromtau&&k_sample_name.Contains("DY")) prefix="tau_";
 
-          if(trig_pass && is_os && TriggerMatch1 && ptlep1 > 25. && ptlep2 > 15. && fabs(etalep1) < 2.4 && fabs(etalep2) < 2.4 && dipt < 100.){
+          if(trig_pass && is_os && TriggerMatch1 && l1pt > 25. && l2pt > 15. && fabs(l1eta) < 2.5 && fabs(l1eta) < 2.5 && dipt < 100.){
 
-            istriggered = 1;
             if(mcfromtau && k_sample_name.Contains("DY") ) DYtautau = 1;
-            if(DYtautau){
-              std::cout << "name: "<< k_sample_name << std::endl;
-              std::cout << "from tau?: " << mcfromtau << std::endl;
-            }
 
-               weightTotal = weight*weigtbytrig*idsf*recosf*pileup_reweight;
+            weightTotal = weight*weigtbytrig*idsf*recosf*pileup_reweight;
 
-               ptRec.push_back(ptlep1);
-               ptRec.push_back(ptlep2);
-               ptRec.push_back(dipt);
-
-               etaRec.push_back(etalep1);
-               etaRec.push_back(etalep2);
-               etaRec.push_back((electrons[0]+electrons[1]).Eta());
-
-               mRec.push_back(electrons[0].M());
-               mRec.push_back(electrons[1].M());
-               mRec.push_back((electrons[0]+electrons[1]).M());
-
-               for(int i = 0; i < nBoundaries-1; i++){
-                  if(dimass > massBinBoundaries[i] && dimass < massBinBoundaries[i+1]){
-                    // dilepton pt for each mass bin
-                    FillHist(prefix+"dielectronmass_"+massbins[i],dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
-                    FillHist(prefix+"dielectronmass_"+massbins[i]+"_weightTotal",dimass,weightTotal, dimass_min, dimass_max, ndimass);
-
-                  }
-               }
+            ispassRec=1;
+            ptRec.push_back(l1pt);
+            ptRec.push_back(l2pt);
+            ptRec.push_back(dipt);
+            etaRec.push_back(l1eta);
+            etaRec.push_back(l2eta);
+            etaRec.push_back(dieta);
+            mRec.push_back(l1mass);
+            mRec.push_back(l2mass);
+            mRec.push_back(dimass);
 
           } // event selection for opposite sign electrons 
 
@@ -250,20 +235,24 @@ void ISRee_unfolding::BeginCycle() throw( LQError ){
   //  DeclareVariable(out_electrons, "Signal_Electrons", "LQTree");
   //  DeclareVariable(out_muons, "Signal_Muons");
 
-  DeclareVariable(etaRec,"etarec","tree"); 
-  DeclareVariable(ptRec,"ptrec","tree"); 
-  DeclareVariable(mRec,"mrec","tree"); 
-  DeclareVariable(istriggered,"istriggered","tree"); 
-  DeclareVariable(weight_,"weight","tree"); 
+  DeclareVariable(ptPreFSR,"ptPreFSR","tree"); 
+  DeclareVariable(mPreFSR,"mPreFSR","tree");
+  DeclareVariable(etaRec,"etaRec","tree"); 
+  DeclareVariable(ptRec,"ptRec","tree"); 
+  DeclareVariable(mRec,"mRec","tree");
+  DeclareVariable(ptGen,"ptGen","tree"); 
+  DeclareVariable(etaGen,"etaGen","tree"); 
+  DeclareVariable(mGen,"mGen","tree"); 
+ 
+  DeclareVariable(ispassRec,"ispassRec","tree"); 
+  DeclareVariable(isfiducialGen,"isfiducialGen","tree"); 
+  DeclareVariable(isfiducialPreFSR,"isfiducialPreFSR","tree"); 
+
+  DeclareVariable(weightGen,"weightGen","tree"); 
   DeclareVariable(weightTotal,"weightTotal","tree"); 
-  DeclareVariable(ptGen,"ptgen","tree"); 
-  DeclareVariable(etaGen,"etagen","tree"); 
-  DeclareVariable(mGen,"mgen","tree"); 
-  DeclareVariable(issignal,"issignal","tree"); 
   DeclareVariable(DYtautau,"DYtautau","tree"); 
 
   return;
-  
 }
 
 ISRee_unfolding::~ISRee_unfolding() {
@@ -304,11 +293,12 @@ void ISRee_unfolding::ClearOutputVectors() throw(LQError) {
   //
   // Reset all variables declared in Declare Variable
   //
-
-  issignal = 0;
-  istriggered = 0;
+  isfiducialGen = 0;
+  isfiducialPreFSR = 0;
+  ispassRec = 0;
   DYtautau = 0;
-  weight_ = 1.;
+
+  weightGen = 1.;
   weightTotal = 1.;
 
   etaRec.clear();
@@ -318,7 +308,8 @@ void ISRee_unfolding::ClearOutputVectors() throw(LQError) {
   etaGen.clear();
   ptGen.clear();
   mGen.clear();
+
+  ptPreFSR.clear();
+  mPreFSR.clear();
 }
-
-
 
