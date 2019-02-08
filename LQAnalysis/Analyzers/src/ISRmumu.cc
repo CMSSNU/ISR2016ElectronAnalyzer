@@ -207,7 +207,7 @@ void ISRmumu::ExecuteEvents()throw( LQError ){
     ISOSF_up=mcdata_correction->MuonISOScaleFactor("MUON_POG_TIGHT", muons, 1);  //muon isolation scale factor sys
     ISOSF_down=mcdata_correction->MuonISOScaleFactor("MUON_POG_TIGHT", muons, -1);  //muon isolation scale factor sys
 
-    triggerSF_double=mcdata_correction->GetDoubleMUTriggerEffISR(muons);  //no scale factor for double muon trigger yet
+    triggerSF_double=mcdata_correction->GetDoubleMUTriggerEffISR(muons, 0);  //no scale factor for double muon trigger yet
   }
   double weightTotal=weight*lumiweight_double*PUreweight*IDSF*ISOSF;
   FillCutFlow("AfterScaleFactor",weightTotal);

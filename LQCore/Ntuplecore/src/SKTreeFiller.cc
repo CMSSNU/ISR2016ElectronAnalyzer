@@ -413,7 +413,7 @@ std::vector<KPhoton> SKTreeFiller::GetAllPhotons(){
   std::vector<KPhoton> photons;
 
   if(k_cat_version < 3) return photons;
-  if(k_cat_version > 4) return photons;
+  //if(k_cat_version > 4) return photons;
   
   if(!LQinput){
     for(std::vector<KPhoton>::iterator kit  = k_inputphotons->begin(); kit != k_inputphotons->end(); kit++){
@@ -427,29 +427,29 @@ std::vector<KPhoton> SKTreeFiller::GetAllPhotons(){
     
     ph.SetPtEtaPhiE(photons_pt->at(iph),photons_eta->at(iph), photons_phi->at(iph),photons_energy->at(iph));
 
-    ph.SetIsLoose(photons_photonID_loose->at(iph));
-    ph.SetIsMedium(photons_photonID_medium->at(iph));
-    ph.SetIsTight(photons_photonID_tight->at(iph));
-    ph.SetPassMVA(photons_photonID_mva->at(iph));
-    ph.SetMCMatched(photons_mcMatched->at(iph));
-    ph.SetHasPixSeed(photons_haspixseed->at(iph));
-    ph.SetPassElVeto(photons_passelectronveto->at(iph));
+  //  ph.SetIsLoose(photons_photonID_loose->at(iph));
+  //  ph.SetIsMedium(photons_photonID_medium->at(iph));
+  //  ph.SetIsTight(photons_photonID_tight->at(iph));
+  //  ph.SetPassMVA(photons_photonID_mva->at(iph));
+  //   ph.SetMCMatched(photons_mcMatched->at(iph));
+  //   ph.SetHasPixSeed(photons_haspixseed->at(iph));
+  //   ph.SetPassElVeto(photons_passelectronveto->at(iph));
 
-    ph.SetChargedHadIsoNoEA(photons_chargedHadronIso->at(iph));
-    ph.SetpuChargedHadIsoNoEA(photons_puChargedHadronIso->at(iph));
-    ph.SetNeutalHadIsoNoEA(photons_neutralHadronIso->at(iph));
-    ph.SetPhotonIsoNoEA(photons_photonIso->at(iph));
-    ph.SetRhoIso(photons_rhoIso->at(iph));
-    ph.SetChargedHadIso(photons_chargedHadronIsoWithEA->at(iph));
-    ph.SetPhotonIso(photons_photonIsoWithEA->at(iph));
-    ph.SetNeutalHadIso(photons_neutralHadronIsoWithEA->at(iph));
-    ph.SetSigmaIetaIeta(photons_sigmaietaieta->at(iph));
-    ph.SetR9(photons_r9->at(iph));
-    ph.SetHoverE(photons_hovere->at(iph));
-    ph.SetSCEta(photons_sceta->at(iph));
-    ph.SetSCPhi(photons_scphi->at(iph));
-    ph.SetSCRawE(photons_scrawenergy->at(iph));
-    ph.SetSCPreShowerE(photons_scpreshowerenergy->at(iph));
+  //   ph.SetChargedHadIsoNoEA(photons_chargedHadronIso->at(iph));
+  //   ph.SetpuChargedHadIsoNoEA(photons_puChargedHadronIso->at(iph));
+  //   ph.SetNeutalHadIsoNoEA(photons_neutralHadronIso->at(iph));
+  //   ph.SetPhotonIsoNoEA(photons_photonIso->at(iph));
+  //   ph.SetRhoIso(photons_rhoIso->at(iph));
+  //   ph.SetChargedHadIso(photons_chargedHadronIsoWithEA->at(iph));
+  //   ph.SetPhotonIso(photons_photonIsoWithEA->at(iph));
+  //   ph.SetNeutalHadIso(photons_neutralHadronIsoWithEA->at(iph));
+  //   ph.SetSigmaIetaIeta(photons_sigmaietaieta->at(iph));
+  //   ph.SetR9(photons_r9->at(iph));
+  //   ph.SetHoverE(photons_hovere->at(iph));
+  //   ph.SetSCEta(photons_sceta->at(iph));
+  //   ph.SetSCPhi(photons_scphi->at(iph));
+  //   ph.SetSCRawE(photons_scrawenergy->at(iph));
+  //   ph.SetSCPreShowerE(photons_scpreshowerenergy->at(iph));
     
     photons.push_back(ph);
   }

@@ -309,10 +309,9 @@ void ISRee::ExecuteEvents()throw( LQError ){
 
   bool trig_pass= PassTriggerOR(trignames);
 
-  double idsf = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 0);
-  double idsf_ = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electrons, 0);
-  double idsf_up = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, 1);
-  double idsf_down = mcdata_correction->ElectronScaleFactor("ELECTRON_POG_MEDIUM", electrons, -1);
+  double idsf = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electrons, 0);
+  double idsf_up = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electrons, 1);
+  double idsf_down = mcdata_correction->ElectronScaleFactor("ELECTRONISR_POG_MEDIUM", electrons, -1);
 
   double recosf = mcdata_correction->ElectronRecoScaleFactor(electrons, 0);
   double recosf_up = mcdata_correction->ElectronRecoScaleFactor(electrons, 1);
@@ -327,8 +326,7 @@ void ISRee::ExecuteEvents()throw( LQError ){
   std::vector<snu::KJet> jets = eventbase->GetJets();
 
   double l1prefireweight = 1.;
-  if(!isData)  l1prefireweight = mcdata_correction->GetL1ECALPrefiringWeight(photons, jets);
-  std::cout << "l1prefireweight: " << l1prefireweight << std::endl;
+  if(!isData)  l1prefireweight = mcdata_correction->GetL1ECALPrefiringWeight(photons, jets, 0);
 
   std::vector<snu::KElectron> electron_leading;
   std::vector<snu::KElectron> electron_subleading;
@@ -371,7 +369,7 @@ void ISRee::ExecuteEvents()throw( LQError ){
    TString postfix1="_asymptcut";
 
    double trig_sf = 1.;
-   if(!isData) trig_sf = mcdata_correction->GetDoubleEGTriggerEffISR(electrons);
+   if(!isData) trig_sf = mcdata_correction->GetDoubleEGTriggerEffISR(electrons, 0);
 
     // for b veto
     std::vector<snu::KJet> jetsPreColl = GetJets("JET_NOLEPTONVETO", 20, 2.4); 
@@ -392,8 +390,8 @@ void ISRee::ExecuteEvents()throw( LQError ){
                FillHist(prefix+"dielectronmass_"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
 
                // dilepton pt for each mass bin
-               FillHist(prefix+"dielectronptIDSF_"+postfix1,dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
-               FillHist(prefix+"dielectronmassIDSF_"+postfix1,dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+               FillHist(prefix+"dielectronptIDSF_"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassIDSF_"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
 
                // dilepton pt for each mass bin
                FillHist(prefix+"dielectronptTrgSF_"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
@@ -408,23 +406,23 @@ void ISRee::ExecuteEvents()throw( LQError ){
                FillHist(prefix+"dielectronmassRecoSFNoTrgSFNoIDSF_"+postfix1,dimass,weight*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
 
                // dilepton pt for each mass bin, No trigger scale factor applied 
-               FillHist(prefix+"dielectronptRecoSFNoTrgSFIDSF_"+postfix1,dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt); 
-               FillHist(prefix+"dielectronmassRecoSFNoTrgSFIDSF_"+postfix1,dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
+               FillHist(prefix+"dielectronptRecoSFNoTrgSFIDSF_"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt); 
+               FillHist(prefix+"dielectronmassRecoSFNoTrgSFIDSF_"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig, dimass_min, dimass_max, ndimass);
 
                // dilepton pt for each mass bin, trigger and ID scale factor applied
-               FillHist(prefix+"dielectronptRecoSFTrgSFIDSF_"+postfix1,dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
-               FillHist(prefix+"dielectronmassRecoSFTrgSFIDSF_"+postfix1,dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+               FillHist(prefix+"dielectronptRecoSFTrgSFIDSF_"+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassRecoSFTrgSFIDSF_"+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
 
                // dilepton pt for each mass bin
                // loose B 
                if(bjets_medium.size()==0){
-               FillHist(prefix+"dielectronptTrgSFIDSF_"+postfix1+"_mediumBveto",dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
-               FillHist(prefix+"dielectronmassTrgSFIDSF_"+postfix1+"_mediumBveto",dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+               FillHist(prefix+"dielectronptTrgSFIDSF_"+postfix1+"_mediumBveto",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassTrgSFIDSF_"+postfix1+"_mediumBveto",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
                }
 
                if(bjets_tight.size()==0){
-               FillHist(prefix+"dielectronptTrgSFIDSF_"+postfix1+"_tightBveto",dipt,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
-               FillHist(prefix+"dielectronmassTrgSFIDSF_"+postfix1+"_tightBveto",dimass,weight*idsf_*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
+               FillHist(prefix+"dielectronptTrgSFIDSF_"+postfix1+"_tightBveto",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
+               FillHist(prefix+"dielectronmassTrgSFIDSF_"+postfix1+"_tightBveto",dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
                }
                // leading and subleading pt, without any SF 
                FillHist(prefix+"leadingptNoRecoSFNoTrgSFNoIDSF_"+postfix1,   ptlep1,weight*pileup_reweight*weigtbytrig, leppt_min, leppt_max, npt);
@@ -465,6 +463,9 @@ void ISRee::ExecuteEvents()throw( LQError ){
             FillHist(prefix+"dielectronptTrgSF_"+massbins[i]+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dipt_min, dipt_max, ndipt);
             FillHist(prefix+"dielectronmassTrgSF_"+massbins[i]+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf, dimass_min, dimass_max, ndimass);
 
+            FillHist(prefix+"dielectronptTrgSFL1pre_"+massbins[i]+postfix1,dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf*l1prefireweight, dipt_min, dipt_max, ndipt);
+            FillHist(prefix+"dielectronmassTrgSFL1pre_"+massbins[i]+postfix1,dimass,weight*idsf*pileup_reweight*recosf*weigtbytrig*trig_sf*l1prefireweight, dimass_min, dimass_max, ndimass);
+
             // loose B 
             if(bjets_loose.size()==0){
             FillHist(prefix+"dielectronpt_"+massbins[i]+postfix1+"_looseBveto",dipt,weight*idsf*pileup_reweight*recosf*weigtbytrig, dipt_min, dipt_max, ndipt);
@@ -499,13 +500,24 @@ void ISRee::ExecuteEvents()throw( LQError ){
             } 
 
             // leading and subleading pt for each mass bin
-            FillHist(prefix+"leadingpt_"+massbins[i]+postfix1,ptlep1,weight*idsf_lead*pileup_reweight*recosf*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
-            FillHist(prefix+"subleadingpt_"+massbins[i]+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
+            FillHist(prefix+"leadingpt_"+massbins[i]+postfix1,ptlep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig, leppt_min, leppt_max, npt);
+            FillHist(prefix+"subleadingpt_"+massbins[i]+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig, leppt_min, leppt_max, npt);
+
+            FillHist(prefix+"leadingptTrgSF_"+massbins[i]+postfix1,ptlep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
+            FillHist(prefix+"subleadingptTrgSF_"+massbins[i]+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig*trig_sf, leppt_min, leppt_max, npt);
+
+            FillHist(prefix+"leadingptTrgSFL1pre_"+massbins[i]+postfix1,ptlep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig*trig_sf*l1prefireweight, leppt_min, leppt_max, npt);
+            FillHist(prefix+"subleadingptTrgSFL1pre_"+massbins[i]+postfix1,ptlep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig*trig_sf*l1prefireweight, leppt_min, leppt_max, npt);
 
             // leading and subleading eta for each mass bin
-            FillHist(prefix+"leadingeta_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
-            if(ptlep1>40 && ptlep2>40) FillHist(prefix+"leadingetapt40_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
-            FillHist(prefix+"subleadingeta_"+massbins[i]+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+            FillHist(prefix+"leadingeta_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig, lepeta_min, lepeta_max, neta);
+            FillHist(prefix+"subleadingeta_"+massbins[i]+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig, lepeta_min, lepeta_max, neta);
+
+            FillHist(prefix+"leadingetaTrgSF_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+            FillHist(prefix+"subleadingetaTrgSF_"+massbins[i]+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig*trig_sf, lepeta_min, lepeta_max, neta);
+
+            FillHist(prefix+"leadingetaTrgSFL1pre_"+massbins[i]+postfix1,etalep1,weight*idsf_lead*pileup_reweight*recosf_lead*weigtbytrig*trig_sf*l1prefireweight, lepeta_min, lepeta_max, neta);
+            FillHist(prefix+"subleadingetaTrgSFL1pre_"+massbins[i]+postfix1,etalep2,weight*idsf_sublead*pileup_reweight*recosf_sublead*weigtbytrig*trig_sf*l1prefireweight, lepeta_min, lepeta_max, neta);
           }
 
        }

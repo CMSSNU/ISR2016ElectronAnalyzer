@@ -637,16 +637,17 @@ double MCDataCorrections::GetPrefiringRate( double eta, double pt, TString h_nam
   int thebin= h_prefmap->FindBin(eta,pt);
 
   double prefrate =  h_prefmap->GetBinContent(thebin);
-
-  //if(fluctuation == up) prefrate = TMath::Min(TMath::Max(prefrate +  h_prefmap->GetBinError(thebin), (1.+prefiringRateSystUnc_)*prefrate),1.);
-  //if(fluctuation == down) prefrate = TMath::Max(TMath::Min(prefrate -  h_prefmap->GetBinError(thebin), (1.-prefiringRateSystUnc_)*prefrate),0.);
+  
+  double prefiringRateSystUnc_ = 0.2; //https://twiki.cern.ch/twiki/bin/viewauth/CMS/L1ECALPrefiringWeightRecipe
+  if(fluctuation == 1) prefrate = TMath::Min(TMath::Max(prefrate +  h_prefmap->GetBinError(thebin), (1.+prefiringRateSystUnc_)*prefrate),1.);
+  if(fluctuation == 2) prefrate = TMath::Max(TMath::Min(prefrate -  h_prefmap->GetBinError(thebin), (1.-prefiringRateSystUnc_)*prefrate),0.);
 
   return prefrate;
 
 
 }
 
-double MCDataCorrections::GetL1ECALPrefiringWeight(vector<snu::KPhoton> photons, vector<snu::KJet> jets){
+double MCDataCorrections::GetL1ECALPrefiringWeight(vector<snu::KPhoton> photons, vector<snu::KJet> jets, int sys){
 
    //Probability for the event NOT to prefire, computed with the prefiring maps per object. 
    //Up and down values correspond to the resulting value when shifting up/down all prefiring rates in prefiring maps. 
@@ -667,8 +668,6 @@ double MCDataCorrections::GetL1ECALPrefiringWeight(vector<snu::KPhoton> photons,
        double prefiringprob_gam=  GetPrefiringRate( eta_gam, pt_gam, h_prefmap_photon, fluct);
        NonPrefiringProba[fluct] *= (1.-prefiringprob_gam);
      }
-
-
 
      //Now applying the prefiring maps to jets in the affected regions. 
      for( std::vector<snu::KJet>::const_iterator jet = (jets).begin(); jet != (jets).end(); jet++ ) {
@@ -710,10 +709,10 @@ double MCDataCorrections::GetL1ECALPrefiringWeight(vector<snu::KPhoton> photons,
 
    }
 
-  return NonPrefiringProba[0];
+  return NonPrefiringProba[sys];
 }
 
-double  MCDataCorrections::GetDoubleMUTriggerEffISR(vector<snu::KMuon> mu){
+double  MCDataCorrections::GetDoubleMUTriggerEffISR(vector<snu::KMuon> mu, int sys){
 
   double lumi_periodB = 5.929001722;
   double lumi_periodC = 2.645968083;
@@ -744,7 +743,8 @@ double  MCDataCorrections::GetDoubleMUTriggerEffISR(vector<snu::KMuon> mu){
 
   double sferr1_BF = GetCorrectionHist(leg1_BF.Data())->GetBinError(GetCorrectionHist(leg1_BF.Data())->FindBin( fabs(mu.at(0).Eta()), l1pt) );
   double sferr2_BF = GetCorrectionHist(leg2_BF.Data())->GetBinError(GetCorrectionHist(leg2_BF.Data())->FindBin( fabs(mu.at(1).Eta()), l2pt) );
-  sf_BF = sf1_BF * sf2_BF;
+  //sf_BF = sf1_BF * sf2_BF;
+  sf_BF = (sf1_BF + double(sys)*sferr1_BF) * (sf2_BF + double(sys)*sferr2_BF);
   }
 
   TString leg1_GH = "MUON_Mu17_GH_TRIGGER_ISR";
@@ -755,45 +755,31 @@ double  MCDataCorrections::GetDoubleMUTriggerEffISR(vector<snu::KMuon> mu){
 
   double sferr1_GH = GetCorrectionHist(leg1_GH.Data())->GetBinError(GetCorrectionHist(leg1_GH.Data())->FindBin( fabs(mu.at(0).Eta()), l1pt) );
   double sferr2_GH = GetCorrectionHist(leg2_GH.Data())->GetBinError(GetCorrectionHist(leg2_GH.Data())->FindBin( fabs(mu.at(1).Eta()), l2pt) );
-  sf_GH = sf1_GH * sf2_GH;
+  //sf_GH = sf1_GH * sf2_GH;
+  sf_GH = (sf1_GH + double(sys)*sferr1_GH) * (sf2_GH + double(sys)*sferr2_GH);
   }
   return (sf_BF * lumi_BF + sf_GH * lumi_GH)/total_lumi;
 }
 
-double  MCDataCorrections::GetDoubleEGTriggerEffISR(vector<snu::KElectron> el){
+double  MCDataCorrections::GetDoubleEGTriggerEffISR(vector<snu::KElectron> el, int sys){
 
   if(corr_isdata) return 1.;
 
   // FIXME temporary only two electron case
-    TString leg1 = "ELECTRON_ELE23_TRIGGER_ISR";
-    TString leg2 = "ELECTRON_ELE12_TRIGGER_ISR";
-    if(GetCorrectionHist(leg1.Data())){
-    float sf1 = GetCorrectionHist(leg1.Data())->GetBinContent(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
-    float sf2 = GetCorrectionHist(leg2.Data())->GetBinContent(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
+  TString leg1 = "ELECTRON_ELE23_TRIGGER_ISR";
+  TString leg2 = "ELECTRON_ELE12_TRIGGER_ISR";
 
-    double sferr1 = GetCorrectionHist(leg1.Data())->GetBinError(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
-    double sferr2 = GetCorrectionHist(leg2.Data())->GetBinError(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
-    return  sf1*sf2;
-    }
+  if(GetCorrectionHist(leg1.Data()) && el.size() > 1){
+     float sf1 = GetCorrectionHist(leg1.Data())->GetBinContent(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
+     float sf2 = GetCorrectionHist(leg2.Data())->GetBinContent(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
 
+     double sferr1 = GetCorrectionHist(leg1.Data())->GetBinError(GetCorrectionHist(leg1.Data())->FindBin( el.at(0).Eta(), el.at(0).Pt()) );
+     double sferr2 = GetCorrectionHist(leg2.Data())->GetBinError(GetCorrectionHist(leg2.Data())->FindBin( el.at(1).Eta(), el.at(1).Pt()) );
 
-  //// https://twiki.cern.ch/twiki/pub/CMS/HWW2016TriggerAndIdIsoScaleFactorsResults/AN-16-172_temp.pdf
-  //if(el.size() <  2.) return 0.;
-  //if(el.size() == 2.){
-  //  double eff_tl = GetEffDEG1(el[0]) * GetEffDEG2(el[1]);
-  //  double eff_lt = GetEffDEG2(el[0]) * GetEffDEG1(el[1]);
+     return  (sf1 + double(sys)*sferr1) * (sf2 + double(sys)*sferr2);
+  }
 
-  //  double evt_eff = eff_tl + (1. - eff_lt) * eff_tl;
-  //  return evt_eff;
-  //}
-  ///// This is approx correct to set nel > 2 as same form for nel=2 (Fix for correct form. when time permitss)
-  //double eff_tl = GetEffDEG1(el[0]) * GetEffDEG2(el[1]);
-  //double eff_lt = GetEffDEG2(el[0]) * GetEffDEG1(el[1]);
-
-  //double evt_eff = eff_tl + (1. - eff_lt) * eff_tl;
-  //return evt_eff;
-
-
+  //sf *= ( this_sf + double(sys)*this_sf_err );
   return 1.;
 }
 

@@ -106,6 +106,8 @@ declare -a tmp2=(
 #declare -a test_list=('DYJets' 'DYJets_10to50') 
 declare -a isr_bkg_list=('TT_powheg' 'WW'  'WZ' 'ZZ' 'WJets') 
 declare -a isr_dy_list=('DYJets' 'DYJets_10to50')
+#declare -a isr_dy_list=('DYJets')
+#declare -a isr_dy_list=('DYJets_10to50')
 
 declare -a new_list=('DYJets' 'LowStatDYJets' )
 declare -a new_list=('HeavyNeutrinoToEmEm_Tchannel_M1000_v2' 'HeavyNeutrinoToEmEm_Tchannel_M1700_v2' 'HeavyNeutrinoToEmMum_Tchannel_M1000_v2' 'HeavyNeutrinoToEmMum_Tchannel_M1700_v2' 'HeavyNeutrinoToEpEp_Tchannel_M1000_v2' 'HeavyNeutrinoToEpEp_Tchannel_M1700_v2' 'HeavyNeutrinoToEpMup_Tchannel_M1000_v2' 'HeavyNeutrinoToEpMup_Tchannel_M1700_v2' 'HeavyNeutrinoToMumEm_Tchannel_M1000_v2' 'HeavyNeutrinoToMumEm_Tchannel_M1700_v2' 'HeavyNeutrinoToMumMum_Tchannel_M1000_v2' 'HeavyNeutrinoToMumMum_Tchannel_M1700_v2' 'HeavyNeutrinoToMupEp_Tchannel_M1000_v2' 'HeavyNeutrinoToMupEp_Tchannel_M1700_v2' 'HeavyNeutrinoToMupMup_Tchannel_M1000_v2' 'HeavyNeutrinoToMupMup_Tchannel_M1700_v2' )

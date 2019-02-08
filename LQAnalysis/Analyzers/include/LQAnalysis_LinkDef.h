@@ -26,6 +26,7 @@
 #pragma link C++ class ISRmumu+;
 #pragma link C++ class ISRemu+;
 #pragma link C++ class ISRee_unfolding+;
+#pragma link C++ class ISRmumu_unfolding+;
 #pragma link C++ class ISRee_FSRunfolding+;
 
 #endif // __CINT__

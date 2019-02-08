@@ -1687,6 +1687,7 @@ else:
 
     outfile = cycle + "_" + filechannel + outsamplename + ".root"
     if doMerge:
+    #if False:
         print "doing merge"
         if not mc:
             outfile = cycle + "_" + outsamplename + ".root"
@@ -1764,6 +1765,7 @@ else:
             print "Non merged output :" +Finaloutputdir
     
     if remove_workspace == "True":
+    #if False:
         if not os.path.exists(os.getenv("LQANALYZER_LOG_PATH")):
             os.system("mkdir " + os.getenv("LQANALYZER_LOG_PATH"))
             

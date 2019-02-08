@@ -1,13 +1,13 @@
-#ifndef ISRee_unfolding_h
-#define ISRee_unfolding_h
+#ifndef ISRmumu_unfolding_h
+#define ISRmumu_unfolding_h
 
 #include "AnalyzerCore.h"
-class ISRee_unfolding : public AnalyzerCore {
+class ISRmumu_unfolding : public AnalyzerCore {
 
  public:
   //// constructors                                                                                                                                                             
-  ISRee_unfolding();
-  ~ISRee_unfolding();
+  ISRmumu_unfolding();
+  ~ISRmumu_unfolding();
 
   /// Functions from core
   virtual void BeginCycle() throw( LQError );
@@ -28,20 +28,16 @@ class ISRee_unfolding : public AnalyzerCore {
   std::vector<snu::KElectron> out_electrons;
 
   // https://github.com/CMSSNU/ISR2016MuonAnalyzer/blob/master/LQAnalysis/Analyzers/include/ISR2016MuonAnalyzer.h#L30
-  std::vector<Int_t> qLep, lepSmearFactor;
   std::vector<Double_t> phiRec, etaRec,ptRec,mRec;
   std::vector<Double_t> etaGen,ptGen,mGen;
   std::vector<Double_t> ptPreFSR,mPreFSR;
+  std::vector<Double_t> TrigSF, Iso1SF, Iso2SF, Id1SF, Id2SF;
   Double_t weightGen, weightRec;
-  std::vector<Double_t> l1PreFire;
-  std::vector<Double_t> TrigSF;
-  std::vector<Double_t> Reco1SF, Reco2SF;
-  std::vector<Double_t> Id1SF, Id2SF;
   Double_t weightRecIdUp, weightRecIdDown, weightRecTriUp, weightRecTriDown, weightRecRecoUp, weightRecRecoDown;
   Double_t weightGenPileUp, weightGenPileDown;
   std::vector<Double_t> weightGenScale, weightGenPdf;
-  Int_t isfiducialGen,ispassRec,isfiducialPreFSR,DYtautau,isBveto, nVtx;
+  Int_t isfiducialGen,ispassRec,isfiducialPreFSR,DYtautau, isBveto, nVtx;
 
-  ClassDef ( ISRee_unfolding, 1);
+  ClassDef ( ISRmumu_unfolding, 1);
 };
 #endif

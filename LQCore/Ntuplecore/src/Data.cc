@@ -704,7 +704,7 @@ void Data::ConnectMuons(){
 
 void Data::ConnectPhotons(){
   
-  if(k_cat_version >2 && k_cat_version < 5){
+  if(k_cat_version >2 && k_cat_version < 9){ // changed to get photons
     ConnectVariable("photons_pt",photons_pt , b_photons_pt);
     ConnectVariable("photons_eta",photons_eta , b_photons_eta);
     ConnectVariable("photons_phi",photons_phi , b_photons_phi);
